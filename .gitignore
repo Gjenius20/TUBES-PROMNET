@@ -1,0 +1,25 @@
+# Binaries
+build/
+*.exe
+*.out
+*.exe~
+
+# Env
+.env
+
+# Dependencies
+vendor/
+web/node_modules/
+web/dist/
+
+# OS/Editor
+.DS_Store
+.vscode/
+.idea/
+tmp/
+
+# Logs
+*.log
+
+# Database Data (Docker Volumes)
+mysql_data/

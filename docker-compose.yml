@@ -1,0 +1,29 @@
+# Layanan lokal untuk development: MySQL (aplikasi) + Docker GCC (sandbox eksekusi kode C).
+# Password di bawah hanya untuk development lokal. JANGAN dipakai di production.
+
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root_pass
+      MYSQL_DATABASE: autograder_db
+      MYSQL_USER: autograder
+      MYSQL_PASSWORD: autograder_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  mysql_data:
