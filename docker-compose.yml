@@ -1,0 +1,39 @@
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: autograder_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: pass
+    ports: ["3306:3306"]
+    volumes: [mysql_data:/var/lib/mysql]
+  judge0-redis:
+    image: redis:7
+  judge0-db:
+    image: postgres:16
+    environment: { POSTGRES_DB: judge0, POSTGRES_USER: judge0, POSTGRES_PASSWORD: judge0 }
+  judge0:
+    image: judge0/judge0:1.13.1
+    privileged: true
+    ports: ["2358:2358"]
+    environment:
+      REDIS_HOST: judge0-redis
+      POSTGRES_HOST: judge0-db
+      POSTGRES_DB: judge0
+      POSTGRES_USER: judge0
+      POSTGRES_PASSWORD: judge0
+    depends_on: [judge0-redis, judge0-db]
+  judge0-worker:
+    image: judge0/judge0:1.13.1
+    command: ["./scripts/workers"]
+    privileged: true
+    environment:
+      REDIS_HOST: judge0-redis
+      POSTGRES_HOST: judge0-db
+      POSTGRES_DB: judge0
+      POSTGRES_USER: judge0
+      POSTGRES_PASSWORD: judge0
+    depends_on: [judge0-redis, judge0-db]
+volumes:
+  mysql_data:
