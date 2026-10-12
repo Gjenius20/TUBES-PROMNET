@@ -1,56 +1,58 @@
-# AI-Powered C Code Autograder
+# AI-Powered Code Assessment & Autograder Platform
 
-Interactive programming learning environment for C programming with automated code evaluation, sandboxed execution via Docker, and AI-assisted problem generation.
+Platform pembelajaran pemrograman interaktif untuk bahasa C dengan evaluasi otomatis, sandbox execution, dan pembuatan soal berbasis AI.
+
+## Daftar Isi
+1. [Tech Stack](#tech-stack)
+2. [Instalasi](#instalasi)
+3. [Konfigurasi](#konfigurasi)
+4. [Menjalankan Aplikasi](#menjalankan-aplikasi)
+5. [Struktur Proyek](#struktur-proyek)
 
 ## Tech Stack
-*   **Backend**: Golang (Gin Gonic)
-*   **Frontend**: ReactJS (Vite)
-*   **Database**: MySQL
-*   **Execution Engine**: Docker (GCC)
+- **Frontend:** ReactJS, Vite, Tailwind CSS, Monaco Editor
+- **Backend:** Golang, Gin Gonic, GORM, MySQL
+- **AI/Execution:** Google Gemini API, Docker (gcc:12)
+- **Auth:** JWT, BCrypt
 
-## Setup
+## Instalasi
+1. Clone repo: `git clone <url>`
+2. Backend: `go mod download`
+3. Frontend: `cd web && npm install`
 
-### 1. Prerequisites
-*   Go 1.21+
-*   Node.js 18+
-*   Docker & Docker Compose
+## Konfigurasi
+Salin `.env.example` ke `.env` dan isi variabel:
+- `DB_DSN`: Koneksi MySQL
+- `JWT_SECRET` & `JWT_REFRESH_SECRET`: Secret token
+- `GEMINI_API_KEY`: API Key AI
+- `DOCKER_GCC_IMAGE`: Docker image GCC
 
-### 2. Environment Configuration
-Create the backend environment file:
-```bash
-cp .env.example .env
-```
-Update `.env` with the following configuration:
-```env
-PORT=9999
-DB_DSN=autograder:autograder_pass@tcp(127.0.0.1:3306)/autograder_db?parseTime=true&charset=utf8mb4&loc=Local
-JWT_SECRET=<your-jwt-access-secret>
-JWT_REFRESH_SECRET=<your-jwt-refresh-secret>
-GEMINI_API_KEY=<your-gemini-api-key>
-CORS_ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
-```
+## Menjalankan Aplikasi
+1. **Infrastruktur:** `docker compose up -d`
+   - Tunggu MySQL *healthy* (`docker compose ps` → STATUS `Up (healthy)`)
+   - Jika gagal koneksi: `docker compose down -v && docker compose up -d`
+2. **Backend:** `air` (live reload) atau `go run ./cmd/server`
+   - Jika port 8080 bentrok: `taskkill /F /IM air.exe` lalu ulangi
+3. **Frontend:** `cd web && npm run dev` (default port 5173)
+4. **Admin:** `go run ./cmd/createadmin -name "Admin" -email admin@example.com -password "pass123"`
 
-### 3. Start Infrastructure
-Start the database container:
-```bash
-docker compose up -d
-```
+## Troubleshooting Umum
+| Masalah | Solusi |
+|---------|--------|
+| `dial tcp 127.0.0.1:3306: connectex: refused` | MySQL belum siap. Tunggu `healthy` atau restart container. |
+| `bind: Only one usage of each socket address` (port 8080) | `taskkill /F /PID $(Get-NetTCPConnection -LocalPort 8080 -State Listen).OwningProcess` |
+| `DOCKER_GCC_IMAGE` salah format | Gunakan nama image, misal `gcc:12`. |
+| `driver: bad connection` / `unexpected EOF` | Normal saat startup pertama; retry otomatis hingga 10x. |
 
-### 4. Running the Application
+## Konfigurasi Penting
+Perbaiki `.env` sebelum jalan:
+- `DOCKER_GCC_IMAGE=gcc:12` (Docker image GCC)
+- `DB_DSN` harus cocok dengan `docker-compose.yml` (user/pass/db)
 
-**Backend:**
-```bash
-go run ./cmd/server
-```
-The server will start on `http://localhost:9999`.
+## Struktur Proyek
+- `/cmd`: Entry point server & CLI.
+- `/internal`: Business logic (controllers, services, repositories).
+- `/web`: Frontend React.
+- `/migrations`: SQL Schema.
 
-**Frontend:**
-```bash
-cd web
-npm install
-npm run dev
-```
-The frontend will start on `http://localhost:5173`.
-
-## Architecture Details
-For detailed architectural information, please refer to [AGENTS.md](AGENTS.md).
+shortcut: dokumentasi minimalis sesuai AGENTS.md, perlu diperbarui jika API bertambah.
