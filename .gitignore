@@ -1,0 +1,28 @@
+# Binaries
+build/
+bin/
+
+# Environment files
+.env
+.env.local
+
+# Docker
+docker-compose.override.yml
+mysql_data/
+
+# Generated graphs/reports
+graphify-out/
+
+# Node modules
+web/node_modules/
+web/dist/
+web/.vite/
+graphify-out
+
+# System files
+.DS_Store
+*.log
+*.exe
+*.o
+*.test
+*.out

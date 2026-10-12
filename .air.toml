@@ -1,0 +1,18 @@
+root = "."
+tmp_dir = "tmp"
+
+[build]
+  
+  bin = ".\\tmp\\server.exe"
+  cmd = "go build -o ./tmp/server.exe ./cmd/server"
+  delay = 500
+  include_ext = ["go"]
+  exclude_dir = ["tmp", "web", "build", "migrations", "vendor", "node_modules"]
+  exclude_regex = ["_test\\.go"]
+  kill_delay = "0.5s"
+
+[log]
+  time = false
+
+[misc]
+  clean_on_exit = true
