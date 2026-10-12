@@ -58,13 +58,3 @@ func (r *submissionRepository) ListByUser(ctx context.Context, userID, quizID ui
 	err := q.Order("id DESC").Limit(50).Find(&list).Error
 	return list, translate(err)
 }
-
-func (r *submissionRepository) ListByUser(ctx context.Context, userID, quizID uint) ([]models.Submission, error) {
-	var list []models.Submission
-	q := r.db.WithContext(ctx).Where("user_id = ?", userID)
-	if quizID != 0 {
-		q = q.Where("quiz_id = ?", quizID)
-	}
-	err := q.Order("id DESC").Limit(50).Find(&list).Error
-	return list, translate(err)
-}

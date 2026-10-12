@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 
 	"autograder/internal/services"
@@ -77,4 +78,31 @@ func (h *CourseController) Delete(c *gin.Context) {
 		return
 	}
 	utils.Success(c, http.StatusOK, "course deleted", nil)
+}
+
+func (h *CourseController) GetProgress(c *gin.Context) {
+	id, ok := parseID(c, "id")
+	if !ok {
+		return
+	}
+	progress, err := h.courses.GetStudentProgress(c.Request.Context(), id)
+	if err != nil {
+		handleError(c, err)
+		return
+	}
+	utils.Success(c, http.StatusOK, "progress retrieved", gin.H{"progress": progress})
+}
+
+func (h *CourseController) ExportExcel(c *gin.Context) {
+	id, ok := parseID(c, "id")
+	if !ok {
+		return
+	}
+
+	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"course-report-%d.xlsx\"", id))
+
+	if err := h.courses.ExportCourseProgressToExcel(c.Request.Context(), id, c.Writer); err != nil {
+		handleError(c, err)
+	}
 }

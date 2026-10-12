@@ -63,6 +63,9 @@ func newRouter(cfg *config.Config, h handlers) *gin.Engine {
 		admin.DELETE("/quizzes/:id", h.quiz.Delete)
 		admin.POST("/quizzes/:id/testcases", h.quiz.AddTestCase)
 
+		admin.GET("/courses/:id/progress", h.course.GetProgress)
+		admin.GET("/courses/:id/export-excel", h.course.ExportExcel)
+
 		admin.DELETE("/testcases/:id", h.quiz.DeleteTestCase)
 	}
 
