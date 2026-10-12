@@ -14,7 +14,7 @@ import (
 
 var ErrUnavailable = errors.New("code execution service unavailable")
 
-// Status ID constants (compatibility dengan Judge0).
+// Status ID constants.
 const (
 	StatusAccepted         = 3
 	StatusTimeLimit        = 5

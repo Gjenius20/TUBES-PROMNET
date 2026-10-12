@@ -74,9 +74,10 @@ type Submission struct {
 	PassedCount  int              `gorm:"not null;default:0" json:"passed_count"`
 	TotalCount   int              `gorm:"not null;default:0" json:"total_count"`
 	ErrorMessage string           `gorm:"type:text" json:"error_message"`
+	ResultsJson  string           `gorm:"type:text" json:"-"`
 	CreatedAt    time.Time        `json:"created_at"`
 
-	// Results hanya diisi pada response POST /submissions; tidak disimpan di database.
+	// Results di-load dari ResultsJson atau diisi langsung saat submit.
 	Results []TestResult `gorm:"-" json:"results,omitempty"`
 }
 

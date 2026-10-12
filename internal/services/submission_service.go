@@ -9,6 +9,7 @@ import (
 	"autograder/internal/repositories"
 	"autograder/internal/services/autograder"
 	"autograder/internal/services/docker"
+	"encoding/json"
 )
 
 const (
@@ -32,9 +33,9 @@ func NewSubmissionService(
 	return &SubmissionService{submissions: submissions, quizzes: quizzes, testCases: testCases, runner: runner}
 }
 
-// Submit menjalankan kode siswa terhadap seluruh testcase lewat Judge0 (tidak pernah di host),
+// Submit menjalankan kode siswa terhadap seluruh testcase lewat Docker (tidak pernah di host),
 // menilai hasilnya dengan tolerance matcher, lalu menyimpan submission.
-// Bila Judge0 gagal, tidak ada submission yang disimpan dan error dikembalikan.
+// Bila Docker gagal, tidak ada submission yang disimpan dan error dikembalikan.
 func (s *SubmissionService) Submit(ctx context.Context, userID, quizID uint, sourceCode string) (*models.Submission, error) {
 	if _, err := s.quizzes.FindByID(ctx, quizID); err != nil {
 		return nil, err
@@ -97,7 +98,7 @@ func (s *SubmissionService) Submit(ctx context.Context, userID, quizID uint, sou
 				sub.ErrorMessage = truncate(firstNonEmpty(res.Stderr, res.Message, res.StatusDescription), maxErrorMessage)
 			}
 		default:
-			// Status antrean/proses/internal error dari Judge0: bukan kesalahan siswa.
+			// Status antrean/proses/internal error dari Docker: bukan kesalahan siswa.
 			return nil, fmt.Errorf("%w: unexpected status %d (%s)", docker.ErrUnavailable, res.StatusID, res.StatusDescription)
 		}
 		results = append(results, tr)
@@ -116,6 +117,11 @@ func (s *SubmissionService) Submit(ctx context.Context, userID, quizID uint, sou
 }
 
 func (s *SubmissionService) save(ctx context.Context, sub *models.Submission, results []models.TestResult) (*models.Submission, error) {
+	if len(results) > 0 {
+		if b, err := json.Marshal(results); err == nil {
+			sub.ResultsJson = string(b)
+		}
+	}
 	if err := s.submissions.Create(ctx, sub); err != nil {
 		return nil, err
 	}

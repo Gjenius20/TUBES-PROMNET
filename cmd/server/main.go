@@ -61,7 +61,7 @@ func main() {
 		Handler:           router,
 		ReadHeaderTimeout: 10 * time.Second,
 		ReadTimeout:       30 * time.Second,
-		// Submission bisa memakan waktu (banyak testcase x Judge0), beri ruang cukup.
+		// Submission bisa memakan waktu (banyak testcase x Docker), beri ruang cukup.
 		WriteTimeout: 180 * time.Second,
 		IdleTimeout:  60 * time.Second,
 	}

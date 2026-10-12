@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"encoding/json"
 
 	"autograder/internal/models"
 
@@ -29,6 +30,9 @@ func (r *submissionRepository) FindByID(ctx context.Context, id uint) (*models.S
 	var submission models.Submission
 	if err := r.db.WithContext(ctx).First(&submission, id).Error; err != nil {
 		return nil, translate(err)
+	}
+	if submission.ResultsJson != "" {
+		_ = json.Unmarshal([]byte(submission.ResultsJson), &submission.Results)
 	}
 	return &submission, nil
 }

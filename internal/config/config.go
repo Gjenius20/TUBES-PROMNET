@@ -18,7 +18,7 @@ type Config struct {
 	JWTRefreshSecret   string
 	GeminiAPIKey       string
 	GeminiModel        string
-	Judge0APIURL       string
+	PistonAPIURL       string
 	CORSAllowedOrigins []string
 	CookieSecure       bool
 }
@@ -35,7 +35,7 @@ func Load() (*Config, error) {
 		JWTRefreshSecret: os.Getenv("JWT_REFRESH_SECRET"),
 		GeminiAPIKey:     os.Getenv("GEMINI_API_KEY"),
 		GeminiModel:      getEnv("GEMINI_MODEL", "gemini-2.5-flash"),
-		Judge0APIURL:     os.Getenv("JUDGE0_API_URL"),
+		PistonAPIURL:     os.Getenv("PISTON_API_URL"),
 	}
 
 	required := []struct{ key, value string }{
@@ -43,7 +43,6 @@ func Load() (*Config, error) {
 		{"JWT_SECRET", cfg.JWTSecret},
 		{"JWT_REFRESH_SECRET", cfg.JWTRefreshSecret},
 		{"GEMINI_API_KEY", cfg.GeminiAPIKey},
-		{"JUDGE0_API_URL", cfg.Judge0APIURL},
 	}
 	var missing []string
 	for _, r := range required {
