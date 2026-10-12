@@ -3,12 +3,13 @@ package controllers
 type RegisterRequest struct {
 	Name     string `json:"name" binding:"required,min=2,max=100"`
 	Email    string `json:"email" binding:"required,email,max=191"`
+	NIM      string `json:"nim" binding:"omitempty,min=3,max=50"`
 	Password string `json:"password" binding:"required,min=8,max=72"`
 }
 
 type LoginRequest struct {
-	Email    string `json:"email" binding:"required,email,max=191"`
-	Password string `json:"password" binding:"required,max=72"`
+	Identifier string `json:"identifier" binding:"required,max=191"`
+	Password   string `json:"password" binding:"required,max=72"`
 }
 
 type CourseRequest struct {

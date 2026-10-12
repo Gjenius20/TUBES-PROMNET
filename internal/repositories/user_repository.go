@@ -11,6 +11,8 @@ import (
 type UserRepository interface {
 	Create(ctx context.Context, user *models.User) error
 	FindByEmail(ctx context.Context, email string) (*models.User, error)
+	FindByNIM(ctx context.Context, nim string) (*models.User, error)
+	FindByIdentifier(ctx context.Context, identifier string) (*models.User, error)
 	FindByID(ctx context.Context, id uint) (*models.User, error)
 }
 
@@ -25,6 +27,22 @@ func (r *userRepository) Create(ctx context.Context, user *models.User) error {
 func (r *userRepository) FindByEmail(ctx context.Context, email string) (*models.User, error) {
 	var user models.User
 	if err := r.db.WithContext(ctx).Where("email = ?", email).First(&user).Error; err != nil {
+		return nil, translate(err)
+	}
+	return &user, nil
+}
+
+func (r *userRepository) FindByIdentifier(ctx context.Context, identifier string) (*models.User, error) {
+	var user models.User
+	if err := r.db.WithContext(ctx).Where("email = ? OR nim = ?", identifier, identifier).First(&user).Error; err != nil {
+		return nil, translate(err)
+	}
+	return &user, nil
+}
+
+func (r *userRepository) FindByNIM(ctx context.Context, nim string) (*models.User, error) {
+	var user models.User
+	if err := r.db.WithContext(ctx).Where("nim = ?", nim).First(&user).Error; err != nil {
 		return nil, translate(err)
 	}
 	return &user, nil

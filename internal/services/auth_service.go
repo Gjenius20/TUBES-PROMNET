@@ -27,13 +27,22 @@ func NewAuthService(users repositories.UserRepository, tokens *utils.TokenManage
 func normalizeEmail(email string) string { return strings.ToLower(strings.TrimSpace(email)) }
 
 // Register selalu membuat akun STUDENT. Akun ADMIN dibuat lewat cmd/createadmin.
-func (s *AuthService) Register(ctx context.Context, name, email, password string) (*models.User, *AuthTokens, error) {
+func (s *AuthService) Register(ctx context.Context, name, email, nim, password string) (*models.User, *AuthTokens, error) {
 	email = normalizeEmail(email)
 
 	if _, err := s.users.FindByEmail(ctx, email); err == nil {
 		return nil, nil, ErrEmailTaken
 	} else if !errors.Is(err, repositories.ErrNotFound) {
 		return nil, nil, err
+	}
+
+	nim = strings.TrimSpace(nim)
+	if nim != "" {
+		if _, err := s.users.FindByNIM(ctx, nim); err == nil {
+			return nil, nil, ErrNIMTaken
+		} else if !errors.Is(err, repositories.ErrNotFound) {
+			return nil, nil, err
+		}
 	}
 
 	hash, err := utils.HashPassword(password)
@@ -44,6 +53,7 @@ func (s *AuthService) Register(ctx context.Context, name, email, password string
 	user := &models.User{
 		Name:         strings.TrimSpace(name),
 		Email:        email,
+		NIM:          nim,
 		PasswordHash: hash,
 		Role:         models.RoleStudent,
 	}
@@ -61,8 +71,8 @@ func (s *AuthService) Register(ctx context.Context, name, email, password string
 	return user, tokens, nil
 }
 
-func (s *AuthService) Login(ctx context.Context, email, password string) (*models.User, *AuthTokens, error) {
-	user, err := s.users.FindByEmail(ctx, normalizeEmail(email))
+func (s *AuthService) Login(ctx context.Context, identifier, password string) (*models.User, *AuthTokens, error) {
+	user, err := s.users.FindByIdentifier(ctx, identifier)
 	if err != nil {
 		if errors.Is(err, repositories.ErrNotFound) {
 			return nil, nil, ErrInvalidCredentials
