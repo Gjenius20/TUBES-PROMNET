@@ -9,6 +9,7 @@ import { getErrorMessage } from '../services/api'
 const schema = z.object({
   name: z.string().min(2, 'Minimal 2 karakter').max(100, 'Maksimal 100 karakter'),
   email: z.string().email('Email tidak valid'),
+  nim: z.string().optional().or(z.literal('')),
   password: z.string().min(8, 'Minimal 8 karakter').max(72, 'Maksimal 72 karakter'),
 })
 
@@ -40,6 +41,9 @@ export default function RegisterPage() {
           </FormField>
           <FormField label="Email" error={errors.email?.message}>
             <input type="email" autoComplete="email" className="input" {...register('email')} />
+          </FormField>
+          <FormField label="NIM / NISN (Opsional)" error={errors.nim?.message}>
+            <input type="text" className="input" {...register('nim')} />
           </FormField>
           <FormField label="Password" error={errors.password?.message}>
             <input type="password" autoComplete="new-password" className="input" {...register('password')} />

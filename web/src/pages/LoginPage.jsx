@@ -7,7 +7,7 @@ import { useLogin } from '../hooks/useAuth'
 import { getErrorMessage } from '../services/api'
 
 const schema = z.object({
-  email: z.string().email('Email tidak valid'),
+  identifier: z.string().min(1, 'Email atau NIM wajib diisi'),
   password: z.string().min(1, 'Password wajib diisi'),
 })
 
@@ -35,8 +35,8 @@ export default function LoginPage() {
         <h1 className="mb-1 text-3xl font-bold">Masuk ke C-Grader</h1>
         <p className="mb-6 text-sm text-ink-soft">Kerjakan soal pemrograman C dan lihat nilainya langsung.</p>
         <form onSubmit={handleSubmit(onSubmit)} className="panel space-y-4 p-5" noValidate>
-          <FormField label="Email" error={errors.email?.message}>
-            <input type="email" autoComplete="email" className="input" {...register('email')} />
+          <FormField label="Email atau NIM" error={errors.identifier?.message}>
+            <input type="text" autoComplete="username" className="input" {...register('identifier')} />
           </FormField>
           <FormField label="Password" error={errors.password?.message}>
             <input type="password" autoComplete="current-password" className="input" {...register('password')} />

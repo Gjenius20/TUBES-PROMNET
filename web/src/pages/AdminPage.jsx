@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Link } from '@tanstack/react-router'
 import FormField from '../components/FormField'
-import { useCourses, useCreateCourse, useDeleteCourse } from '../hooks/useCourses'
+import { useCourseProgress } from '../hooks/useProgress'
 import { useCreateQuiz, useDeleteQuiz } from '../hooks/useQuizzes'
 import { getErrorMessage } from '../services/api'
 
