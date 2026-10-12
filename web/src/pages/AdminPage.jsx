@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { Link } from '@tanstack/react-router'
 import FormField from '../components/FormField'
 import { useCourseProgress } from '../hooks/useProgress'
+import { useCourses, useCreateCourse, useDeleteCourse } from '../hooks/useCourses'
 import { useCreateQuiz, useDeleteQuiz } from '../hooks/useQuizzes'
 import { getErrorMessage } from '../services/api'
 
@@ -105,6 +106,87 @@ function QuizForm({ courses }) {
   )
 }
 
+function CourseAdminItem({ course, deleteCourse, deleteQuiz }) {
+  const { data, fetchProgress, exportExcel } = useCourseProgress(course.id)
+
+  return (
+    <div key={course.id} className="panel p-4">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h3 className="text-lg font-bold">{course.title}</h3>
+          <p className="text-sm text-ink-soft">{course.description}</p>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={fetchProgress} className="btn-secondary text-xs">Progress</button>
+          <button onClick={exportExcel} className="btn-primary text-xs">Excel</button>
+          <button
+            type="button"
+            className="btn-danger"
+            onClick={() => {
+              if (window.confirm(`Hapus kursus "${course.title}" beserta semua soalnya?`)) {
+                deleteCourse.mutate(course.id)
+              }
+            }}
+          >
+            Hapus
+          </button>
+        </div>
+      </div>
+      
+      {data && (
+        <div className="mt-4 text-xs">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="border-b border-rule">
+                <th className="text-left p-1">NIM</th>
+                <th className="text-left p-1">Nama</th>
+                <th className="text-left p-1">Status</th>
+                <th className="text-right p-1">Progress</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.map(p => (
+                <tr key={p.id} className="border-b border-rule">
+                  <td className="p-1">{p.nim}</td>
+                  <td className="p-1">{p.name}</td>
+                  <td className="p-1">{p.status}</td>
+                  <td className="text-right p-1">{p.progress_pct}%</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <ul className="mt-3 divide-y divide-rule text-sm">
+        {(course.quizzes ?? []).map((quiz) => (
+          <li key={quiz.id} className="flex items-center justify-between py-2">
+            <span>{quiz.title}</span>
+            <span className="flex items-center gap-3">
+              <Link
+                to="/admin/quizzes/$quizId"
+                params={{ quizId: String(quiz.id) }}
+                className="font-semibold text-signal"
+              >
+                Testcase
+              </Link>
+              <button
+                type="button"
+                className="text-fail"
+                onClick={() => {
+                  if (window.confirm(`Hapus soal "${quiz.title}"?`)) deleteQuiz.mutate(quiz.id)
+                }}
+              >
+                Hapus
+              </button>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
 export default function AdminPage() {
   const { data: courses, isLoading, isError, error } = useCourses()
   const deleteCourse = useDeleteCourse()
@@ -131,50 +213,12 @@ export default function AdminPage() {
         ) : null}
         <div className="space-y-4">
           {courses.map((course) => (
-            <div key={course.id} className="panel p-4">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h3 className="text-lg font-bold">{course.title}</h3>
-                  <p className="text-sm text-ink-soft">{course.description}</p>
-                </div>
-                <button
-                  type="button"
-                  className="btn-danger"
-                  onClick={() => {
-                    if (window.confirm(`Hapus kursus "${course.title}" beserta semua soalnya?`)) {
-                      deleteCourse.mutate(course.id)
-                    }
-                  }}
-                >
-                  Hapus
-                </button>
-              </div>
-              <ul className="mt-3 divide-y divide-rule text-sm">
-                {(course.quizzes ?? []).map((quiz) => (
-                  <li key={quiz.id} className="flex items-center justify-between py-2">
-                    <span>{quiz.title}</span>
-                    <span className="flex items-center gap-3">
-                      <Link
-                        to="/admin/quizzes/$quizId"
-                        params={{ quizId: String(quiz.id) }}
-                        className="font-semibold text-signal"
-                      >
-                        Testcase
-                      </Link>
-                      <button
-                        type="button"
-                        className="text-fail"
-                        onClick={() => {
-                          if (window.confirm(`Hapus soal "${quiz.title}"?`)) deleteQuiz.mutate(quiz.id)
-                        }}
-                      >
-                        Hapus
-                      </button>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <CourseAdminItem 
+                key={course.id} 
+                course={course} 
+                deleteCourse={deleteCourse} 
+                deleteQuiz={deleteQuiz} 
+            />
           ))}
         </div>
       </section>
