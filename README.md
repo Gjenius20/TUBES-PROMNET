@@ -11,7 +11,7 @@ Untuk detail arsitektur, spesifikasi teknis, panduan setup, dan aturan pengemban
    git clone <repository-url>
    cd <project-directory>
    cp .env.example .env
-   # Update .env dengan konfigurasi yang sesuai (DB_DSN, JWT_SECRET, GEMINI_API_KEY, PISTON_API_URL)
+   # Update .env dengan konfigurasi yang sesuai (DB_DSN, JWT_SECRET, GEMINI_API_KEY)
    ```
 
 2. **Infrastruktur (Docker):**
@@ -35,7 +35,7 @@ Untuk detail arsitektur, spesifikasi teknis, panduan setup, dan aturan pengemban
 
 5. **Admin Setup:**
    ```bash
-   go run ./cmd/createadmin -name "Admin" -email admin@example.com -password "change-me-please"
+   go run ./cmd/createadmin -name "Admin" -email admin@example.com -nim "ADMIN001" -password "change-me-please"
    ```
 
 ---

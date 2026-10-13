@@ -23,7 +23,7 @@ This repository houses an **AI-Powered Code Assessment & Autograder Platform** b
 | **Database & ORM** | GORM + MySQL Driver (`gorm.io/driver/mysql`) | Relational ORM mapping with MySQL Local |
 | **Config & Environment** | `godotenv` | Environment variable reader for `.env` files |
 | **AI Integration** | Google GenAI SDK (Gemini API) / OpenAI SDK | Automated testcase generation engine |
-| **Code Execution Engine**| Piston API | Isolated sandbox container API for C code compilation & run |
+| **Code Execution Engine**| Docker (gcc:12) | Isolated sandbox container for C code compilation & run |
 
 ---
 
@@ -232,12 +232,11 @@ cp .env.example .env
 Edit `.env` and provide the required values:
 
 ```env
-PORT=8080
-DB_DSN=user:pass@tcp(127.0.0.1:3306)/autograder_db?parseTime=true
+PORT=1111
+DB_DSN=autograder:autograder_pass@tcp(127.0.0.1:3306)/autograder_db?parseTime=true&charset=utf8mb4&loc=Local
 JWT_SECRET=<your-jwt-access-secret>
 JWT_REFRESH_SECRET=<your-jwt-refresh-secret>
 GEMINI_API_KEY=<your-gemini-api-key>
-JUDGE0_API_URL=http://localhost:2358
 ```
 
 The provided `.env.example` already contains DB credentials matching `docker-compose.yml`, plus the optional
@@ -248,7 +247,7 @@ Never commit `.env` or real API keys/secrets to the repository.
 
 ### 4. Start Local Infrastructure
 
-The recommended local setup uses Docker Compose for MySQL and Piston:
+The recommended local setup uses Docker Compose for MySQL:
 
 ```bash
 docker compose up -d
@@ -271,16 +270,9 @@ docker compose exec -T mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" autogr
 
 To start from scratch: `docker compose down -v && docker compose up -d` (this deletes all data).
 
-> Judge0 1.13.x requires cgroup v1. On hosts using only cgroup v2 (recent Docker Desktop / Linux kernels),
-> the Judge0 containers may fail to execute code; see the Judge0 documentation for the required kernel/GRUB setting.
-+
-+> Piston requires cgroup support and privileged access for sandbox execution. On Windows Docker Desktop, ensure WSL2 backend is enabled.
+> **Code Execution:** This project uses Docker directly (`gcc:12` image) for sandboxed C code execution. No separate Judge0 or Piston container is required. Ensure Docker Desktop (WSL2 backend on Windows) is running.
 
 ### 5. Install Backend Dependencies
-
-From the repository root. On the first setup, `go.sum` does not exist yet; generate it (requires internet):
-
-```bash
 go mod tidy
 go mod download
 ```
