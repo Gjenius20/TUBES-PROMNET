@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useParams } from '@tanstack/react-router'
+import { useParams } from '@tanstack/react-router'
 import CodeEditor from '../components/CodeEditor'
 import StatusBadge from '../components/StatusBadge'
 import VerdictStrip from '../components/VerdictStrip'
@@ -40,10 +40,59 @@ function ResultPanel({ submission }) {
           <p className="mb-1 font-semibold">Testcase {r.index}: {r.status}</p>
           {r.stdin ? <pre className="overflow-auto">Input:{'\n'}{r.stdin}</pre> : null}
           <pre className="overflow-auto">Diharapkan:{'\n'}{r.expected_output}</pre>
-          {r.actual_output !== undefined ? <pre className="overflow-auto">Output kamu:{'\n'}{r.actual_output}</pre> : null}
-          {r.message ? <pre className="overflow-auto text-fail">{r.message}</pre> : null}
+          {r.actual_output !== undefined ? <pre className="overflow-auto">Output Anda:{'\n'}{r.actual_output}</pre> : null}
         </div>
       ))}
+    </div>
+  )
+}
+
+function EmptySubmission() {
+  return (
+    <div className="panel p-6 text-center text-ink-soft">
+      <p>Belum ada submission untuk soal ini.</p>
+    </div>
+  )
+}
+
+function EditorPanel({ quiz, submitMutation }) {
+  const [code, setCode] = useState(STARTER_CODE)
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    await submitMutation.mutateAsync({ sourceCode: code })
+  }
+
+  return (
+    <div className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <div>
+          <label htmlFor="editor" className="block text-sm font-medium mb-1">
+            Editor C
+          </label>
+          <CodeEditor value={code} onChange={setCode} />
+        </div>
+
+        <button
+          type="submit"
+          className="btn-primary w-full"
+          disabled={submitMutation.isPending}
+        >
+          {submitMutation.isPending ? 'Mengirim...' : 'Kirim & Jalankan'}
+        </button>
+      </form>
+
+      {submitMutation.isError && (
+        <p role="alert" className="text-fail text-sm">
+          {getErrorMessage(submitMutation.error)}
+        </p>
+      )}
+
+      {submitMutation.isSuccess && (
+        <p role="status" className="text-success text-sm">
+          Submission berhasil dikirim!
+        </p>
+      )}
     </div>
   )
 }
@@ -51,69 +100,70 @@ function ResultPanel({ submission }) {
 export default function WorkspacePage() {
   const { quizId } = useParams({ strict: false })
   const { data: quiz, isLoading, isError, error } = useQuiz(quizId)
-  const { data: history } = useSubmissions(quizId)
-  const submit = useSubmit(quizId)
-  const [code, setCode] = useState(STARTER_CODE)
+  const { data: submissions } = useSubmissions(quizId)
+  const submitMutation = useSubmit(quizId)
 
-  if (isLoading) return <p className="text-ink-soft">Memuat soal…</p>
-  if (isError) return <p role="alert" className="text-fail">{getErrorMessage(error)}</p>
+  if (isLoading) return <p className="p-8 text-ink-soft">Memuat soal...</p>
+  if (isError) return <p role="alert" className="p-8 text-fail">{getErrorMessage(error)}</p>
+  if (!quiz) return <p className="p-8 text-ink-soft">Soal tidak ditemukan.</p>
 
   return (
-    <div>
-      <Link to="/courses/$courseId" params={{ courseId: String(quiz.course_id) }} className="text-sm text-signal">
-        ← Kembali ke kursus
-      </Link>
-      <div className="mt-3 grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
-        <section className="space-y-4">
-          <h1 className="text-2xl font-bold">{quiz.title}</h1>
-          <p className="whitespace-pre-wrap text-sm leading-relaxed">{quiz.description}</p>
-          {quiz.constraints ? (
-            <div>
-              <h2 className="mb-1 text-sm font-bold">Batasan</h2>
-              <p className="whitespace-pre-wrap text-sm text-ink-soft">{quiz.constraints}</p>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Detail Soal */}
+      <div className="panel p-4 space-y-4">
+        <h2 className="text-2xl font-bold">{quiz.title}</h2>
+        <div className="prose text-sm text-ink-soft">{quiz.description}</div>
+
+        {quiz.constraints && (
+          <div className="bg-ink/5 p-3 rounded text-sm">
+            <strong>Batasan:</strong> {quiz.constraints}
+          </div>
+        )}
+
+        {quiz.sampleTestCases?.length > 0 && (
+          <div>
+            <h3 className="font-semibold mb-2">Contoh Testcase</h3>
+            <div className="space-y-2 text-xs font-mono">
+              {quiz.sampleTestCases.map((tc, i) => (
+                <div key={i} className="bg-ink/5 p-2 rounded">
+                  <strong>Input:</strong>
+                  <pre className="whitespace-pre-wrap">{tc.stdin}</pre>
+                  <strong>Output:</strong>
+                  <pre className="whitespace-pre-wrap">{tc.expectedOutput}</pre>
+                </div>
+              ))}
             </div>
-          ) : null}
-          {quiz.sample_test_cases.map((tc, i) => (
-            <div key={i} className="panel p-3 text-xs">
-              <p className="mb-1 font-semibold">Contoh {i + 1}</p>
-              <pre className="overflow-auto">Input:{'\n'}{tc.stdin || '(kosong)'}</pre>
-              <pre className="mt-2 overflow-auto">Output:{'\n'}{tc.expected_output}</pre>
-            </div>
-          ))}
-        </section>
+          </div>
+        )}
+      </div>
 
-        <section className="space-y-4">
-          <CodeEditor value={code} onChange={setCode} />
-          <button
-            type="button"
-            className="btn-primary"
-            disabled={submit.isPending || code.trim() === ''}
-            onClick={() => submit.mutate({ sourceCode: code })}
-          >
-            {submit.isPending ? 'Menilai…' : 'Kirim jawaban'}
-          </button>
+      {/* Editor & Hasil */}
+      <div className="space-y-4">
+        <EditorPanel quiz={quiz} submitMutation={submitMutation} />
 
-          {submit.isError ? (
-            <p role="alert" className="text-sm text-fail">{getErrorMessage(submit.error)}</p>
-          ) : null}
-          {submit.data ? <ResultPanel submission={submit.data} /> : null}
-
-          {history && history.length > 0 ? (
-            <div>
-              <h2 className="mb-2 text-sm font-bold">Riwayat pengiriman</h2>
-              <ul className="panel divide-y divide-rule text-sm">
-                {history.map((s) => (
-                  <li key={s.id} className="flex items-center justify-between px-3 py-2">
-                    <StatusBadge status={s.status} />
-                    <span className="text-ink-soft">
-                      {s.score} · {new Date(s.created_at).toLocaleString('id-ID')}
+        {/* Riwayat Submission */}
+        <div className="panel p-4">
+          <h3 className="font-semibold mb-3">Riwayat Submission</h3>
+          {submissions?.length > 0 ? (
+            <div className="space-y-2 max-h-96 overflow-auto">
+              {submissions.map((sub) => (
+                <div key={sub.id} className="border border-rule rounded p-2">
+                  <div className="flex items-center gap-2">
+                    <StatusBadge status={sub.status} />
+                    <span className="text-sm">
+                      Skor: <strong>{sub.score}</strong> · {sub.passed_count}/{sub.total_count} testcase
                     </span>
-                  </li>
-                ))}
-              </ul>
+                    <span className="text-xs text-ink-soft ml-auto">
+                      {new Date(sub.created_at).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
-          ) : null}
-        </section>
+          ) : (
+            <EmptySubmission />
+          )}
+        </div>
       </div>
     </div>
   )

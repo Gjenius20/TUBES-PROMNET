@@ -14,6 +14,8 @@ type CourseRepository interface {
 	Create(ctx context.Context, course *models.Course) error
 	Update(ctx context.Context, id uint, fields map[string]interface{}) error
 	Delete(ctx context.Context, id uint) error
+	// FindByStudentID mengembalikan kursus yang sudah di-enroll APPROVED oleh student
+	FindByStudentID(ctx context.Context, studentID uint) ([]models.Course, error)
 }
 
 type courseRepository struct{ db *gorm.DB }
@@ -53,4 +55,15 @@ func (r *courseRepository) Delete(ctx context.Context, id uint) error {
 		return ErrNotFound
 	}
 	return nil
+}
+
+func (r *courseRepository) FindByStudentID(ctx context.Context, studentID uint) ([]models.Course, error) {
+	var courses []models.Course
+	err := r.db.WithContext(ctx).
+		Joins("JOIN enrollments ON enrollments.course_id = courses.id").
+		Where("enrollments.user_id = ? AND enrollments.status = ?", studentID, "APPROVED").
+		Preload("Quizzes", orderQuizzes).
+		Order("courses.id ASC").
+		Find(&courses).Error
+	return courses, translate(err)
 }

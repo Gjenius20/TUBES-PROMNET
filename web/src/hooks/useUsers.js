@@ -12,7 +12,7 @@ export function useBulkEnroll(courseId) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (student_ids) => api.post(`/admin/courses/${courseId}/enroll-bulk`, { student_ids }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['adminEnrollments'] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['courses'] }),
   })
 }
 
@@ -21,9 +21,7 @@ export function useRemoveStudent() {
   return useMutation({
     mutationFn: ({ courseId, studentId }) => api.delete(`/admin/courses/${courseId}/enrollments/${studentId}`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['adminEnrollments'] })
-      // Invalidate course detail queries broadly as we don't know which course specifically here
-      qc.invalidateQueries({ queryKey: ['courseDetail'] })
+      qc.invalidateQueries({ queryKey: ['courses'] })
     },
   })
 }

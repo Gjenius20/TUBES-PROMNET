@@ -17,6 +17,7 @@ type handlers struct {
 	course      *controllers.CourseController
 	quiz        *controllers.QuizController
 	submission  *controllers.SubmissionController
+	enrollment  *controllers.EnrollmentController
 	tokenManager *utils.TokenManager
 }
 
@@ -41,8 +42,11 @@ func newRouter(cfg *config.Config, h handlers) *gin.Engine {
 		protected.GET("/auth/me", h.auth.Me)
 
 		protected.GET("/courses", h.course.List)
+		protected.GET("/courses/me", h.course.ListMyCourses)
 		protected.GET("/courses/:id", h.course.Get)
 		protected.GET("/quizzes/:id", h.quiz.Get)
+
+		protected.GET("/student/enrollments", h.enrollment.MyEnrollments)
 
 		protected.POST("/submissions", middleware.RateLimit(10, time.Minute, middleware.ByUser), h.submission.Create)
 		protected.GET("/submissions", h.submission.List)
@@ -64,7 +68,13 @@ func newRouter(cfg *config.Config, h handlers) *gin.Engine {
 		admin.POST("/quizzes/:id/testcases", h.quiz.AddTestCase)
 
 		admin.GET("/courses/:id/progress", h.course.GetProgress)
-		admin.GET("/courses/:id/export-excel", h.course.ExportExcel)
+		admin.GET("/courses/:id/export-grades", h.course.ExportGradesExcel)
+
+		// Enrollment admin routes
+		admin.GET("/courses/:id/enrollments", h.enrollment.ListByCourse)
+		admin.GET("/students", h.enrollment.ListStudents)
+		admin.POST("/courses/:id/enroll-bulk", h.enrollment.BulkEnroll)
+		admin.DELETE("/courses/:id/enrollments/:student_id", h.enrollment.RemoveStudent)
 
 		admin.DELETE("/testcases/:id", h.quiz.DeleteTestCase)
 	}

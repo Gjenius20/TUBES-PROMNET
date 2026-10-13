@@ -1,15 +1,19 @@
 import { Link, useParams } from '@tanstack/react-router'
-import { useCourse } from '../hooks/useCourses'
+import { useCourse, useStudentEnrollments } from '../hooks/useCourses'
 import { getErrorMessage } from '../services/api'
 
 export default function CoursePage() {
   const { courseId } = useParams({ strict: false })
   const { data: course, isLoading, isError, error } = useCourse(courseId)
+  const { data: enrollments, isLoading: enrollLoading } = useStudentEnrollments()
 
-  if (isLoading) return <p className="text-ink-soft">Memuat…</p>
-  if (isError) return <p role="alert" className="text-fail">{getErrorMessage(error)}</p>
+  if (isLoading || enrollLoading) return <p className="p-8 text-ink-soft">Memuat data kursus...</p>
+  if (isError) return <p role="alert" className="p-8 text-fail">{getErrorMessage(error)}</p>
+  if (!course) return <p className="p-8 text-ink-soft">Kursus tidak ditemukan.</p>
 
-  const quizzes = course.quizzes ?? []
+  // Cek status enrollment
+  const enrollment = enrollments?.find(e => e.course_id === Number(courseId))
+  const isEnrolled = enrollment?.status === 'APPROVED'
 
   return (
     <div>
@@ -19,24 +23,36 @@ export default function CoursePage() {
       <h1 className="mt-2 text-3xl font-bold">{course.title}</h1>
       <p className="mt-1 max-w-2xl text-ink-soft">{course.description}</p>
 
-      <h2 className="mb-3 mt-8 text-xl font-bold">Soal</h2>
-      {quizzes.length === 0 ? (
-        <p className="text-ink-soft">Belum ada soal di kursus ini.</p>
+      {/* Enrollment Status */}
+      {!isEnrolled ? (
+        <div className="mt-6 panel p-4">
+          <p className="text-sm">
+            {enrollment 
+              ? `Status Pendaftaran: ${enrollment.status}` 
+              : "Anda belum terdaftar di kursus ini. Silakan hubungi admin untuk pendaftaran."}
+          </p>
+        </div>
       ) : (
-        <ul className="panel divide-y divide-rule">
-          {quizzes.map((quiz) => (
-            <li key={quiz.id}>
-              <Link
-                to="/quizzes/$quizId"
-                params={{ quizId: String(quiz.id) }}
-                className="flex items-center justify-between px-5 py-3 hover:bg-paper"
-              >
-                <span className="font-medium">{quiz.title}</span>
-                <span className="text-sm text-signal">Kerjakan</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <div className="mt-6">
+          <h2 className="text-xl font-bold mb-4">Daftar Soal</h2>
+          {(course.quizzes ?? []).length === 0 ? (
+            <p className="text-ink-soft">Belum ada soal untuk kursus ini.</p>
+          ) : (
+            <ul className="grid gap-2">
+              {course.quizzes.map((quiz) => (
+                <li key={quiz.id}>
+                  <Link
+                    to="/quizzes/$quizId"
+                    params={{ quizId: String(quiz.id) }}
+                    className="panel block p-3 hover:border-ink"
+                  >
+                    {quiz.title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       )}
     </div>
   )

@@ -19,22 +19,5 @@ export function useCourseProgress(courseId) {
     }
   }
 
-  const exportExcel = async () => {
-    try {
-      const res = await api.get(`/admin/courses/${courseId}/export-excel`, {
-        responseType: 'blob',
-      })
-      const url = window.URL.createObjectURL(new Blob([res.data]))
-      const link = document.createElement('a')
-      link.href = url
-      link.setAttribute('download', `course-report-${courseId}.xlsx`)
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-    } catch (err) {
-      setError(err)
-    }
-  }
-
-  return { data, isLoading, error, fetchProgress, exportExcel }
+  return { data, isLoading, error, fetchProgress }
 }

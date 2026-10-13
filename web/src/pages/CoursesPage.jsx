@@ -1,18 +1,24 @@
 import { Link } from '@tanstack/react-router'
 import { useCourses } from '../hooks/useCourses'
+import { useAuthStore } from '../store/authStore'
 import { getErrorMessage } from '../services/api'
 
 export default function CoursesPage() {
   const { data, isLoading, isError, error } = useCourses()
+  const { user } = useAuthStore()
 
   if (isLoading) return <p className="text-ink-soft">Memuat kursus…</p>
   if (isError) return <p role="alert" className="text-fail">{getErrorMessage(error)}</p>
 
   return (
     <div>
-      <h1 className="mb-6 text-3xl font-bold">Kursus</h1>
+      <h1 className="mb-6 text-3xl font-bold">Kursus Anda</h1>
       {data.length === 0 ? (
-        <p className="text-ink-soft">Belum ada kursus.</p>
+        <p className="text-ink-soft">
+          {user?.role === 'ADMIN' 
+            ? "Belum ada kursus." 
+            : "Anda belum terdaftar di kelas manapun. Silakan hubungi Admin untuk dimasukkan ke dalam kelas."}
+        </p>
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2">
           {data.map((course) => (

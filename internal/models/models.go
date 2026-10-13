@@ -23,6 +23,14 @@ const (
 	TestCaseSourceManual = "MANUAL"
 )
 
+type EnrollmentStatus string
+
+const (
+	EnrollmentPending  EnrollmentStatus = "PENDING"
+	EnrollmentApproved EnrollmentStatus = "APPROVED"
+	EnrollmentRejected EnrollmentStatus = "REJECTED"
+)
+
 type User struct {
 	ID           uint      `gorm:"primaryKey" json:"id"`
 	Name         string    `gorm:"size:100;not null" json:"name"`
@@ -49,6 +57,7 @@ type Quiz struct {
 	Title       string     `gorm:"size:150;not null" json:"title"`
 	Description string     `gorm:"type:text;not null" json:"description"`
 	Constraints string     `gorm:"type:text" json:"constraints"`
+	MaxScore    int        `gorm:"not null;default:100" json:"max_score"`
 	TestCases   []TestCase `gorm:"foreignKey:QuizID;constraint:OnDelete:CASCADE" json:"test_cases,omitempty"`
 	CreatedAt   time.Time  `json:"created_at"`
 	UpdatedAt   time.Time  `json:"updated_at"`
@@ -82,6 +91,20 @@ type Submission struct {
 	Results []TestResult `gorm:"-" json:"results,omitempty"`
 }
 
+// Enrollment merepresentasikan pendaftaran siswa ke course.
+type Enrollment struct {
+	ID        uint             `gorm:"primaryKey" json:"id"`
+	UserID    uint             `gorm:"not null;index:idx_enrollments_user_course,unique,priority:1" json:"user_id"`
+	CourseID  uint             `gorm:"not null;index:idx_enrollments_user_course,unique,priority:2" json:"course_id"`
+	Status    EnrollmentStatus `gorm:"size:20;not null;default:PENDING" json:"status"`
+	CreatedAt time.Time        `json:"created_at"`
+	UpdatedAt time.Time        `json:"updated_at"`
+
+	// Relations
+	User   User   `gorm:"foreignKey:UserID" json:"user,omitempty"`
+	Course Course `gorm:"foreignKey:CourseID" json:"course,omitempty"`
+}
+
 // TestResult adalah hasil satu testcase (bukan tabel database).
 // Untuk testcase hidden, input & output yang diharapkan sengaja tidak diisi.
 type TestResult struct {
@@ -93,25 +116,4 @@ type TestResult struct {
 	ExpectedOutput string `json:"expected_output,omitempty"`
 	ActualOutput   string `json:"actual_output,omitempty"`
 	Message        string `json:"message,omitempty"`
-}
-
-type EnrollmentStatus string
-
-const (
-	EnrollmentPending  EnrollmentStatus = "PENDING"
-	EnrollmentApproved EnrollmentStatus = "APPROVED"
-	EnrollmentRejected EnrollmentStatus = "REJECTED"
-)
-
-type Enrollment struct {
-	ID        uint             `gorm:"primaryKey" json:"id"`
-	UserID    uint             `gorm:"not null;index:idx_enrollments_user_course,unique,priority:1;constraint:OnDelete:CASCADE" json:"user_id"`
-	CourseID  uint             `gorm:"not null;index:idx_enrollments_user_course,unique,priority:2;constraint:OnDelete:CASCADE" json:"course_id"`
-	Status    EnrollmentStatus `gorm:"size:20;not null;default:PENDING" json:"status"`
-	CreatedAt time.Time        `json:"created_at"`
-	UpdatedAt time.Time        `json:"updated_at"`
-
-	// Relations
-	User   User   `gorm:"foreignKey:UserID" json:"user,omitempty"`
-	Course Course `gorm:"foreignKey:CourseID" json:"course,omitempty"`
 }
