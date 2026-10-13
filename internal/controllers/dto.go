@@ -3,7 +3,7 @@ package controllers
 type RegisterRequest struct {
 	Name     string `json:"name" binding:"required,min=2,max=100"`
 	Email    string `json:"email" binding:"required,email,max=191"`
-	NIM      string `json:"nim" binding:"omitempty,min=3,max=50"`
+	NIM      string `json:"nim" binding:"required,min=3,max=50"`
 	Password string `json:"password" binding:"required,min=8,max=72"`
 }
 

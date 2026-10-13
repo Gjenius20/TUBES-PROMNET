@@ -44,7 +44,7 @@ func main() {
 	runner := docker.NewClient("gcc:12")
 
 	authService := services.NewAuthService(userRepo, tokenManager)
-	courseService := services.NewCourseService(courseRepo)
+	courseService := services.NewCourseService(courseRepo, userRepo, submissionRepo)
 	quizService := services.NewQuizService(quizRepo, testCaseRepo, courseRepo, generator)
 	submissionService := services.NewSubmissionService(submissionRepo, quizRepo, testCaseRepo, runner)
 

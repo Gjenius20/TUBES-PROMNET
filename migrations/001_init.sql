@@ -4,12 +4,14 @@ CREATE TABLE IF NOT EXISTS users (
   id            BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   name          VARCHAR(100)    NOT NULL,
   email         VARCHAR(191)    NOT NULL,
+  nim           VARCHAR(50)     NOT NULL,
   password_hash VARCHAR(255)    NOT NULL,
   role          VARCHAR(20)     NOT NULL DEFAULT 'STUDENT',
   created_at    DATETIME(3)     NULL,
   updated_at    DATETIME(3)     NULL,
   PRIMARY KEY (id),
   UNIQUE KEY uq_users_email (email),
+  UNIQUE KEY uq_users_nim (nim),
   CONSTRAINT chk_users_role CHECK (role IN ('STUDENT', 'ADMIN'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -59,6 +61,7 @@ CREATE TABLE IF NOT EXISTS submissions (
   passed_count  INT             NOT NULL DEFAULT 0,
   total_count   INT             NOT NULL DEFAULT 0,
   error_message TEXT            NULL,
+  results_json  JSON            NULL,
   created_at    DATETIME(3)     NULL,
   PRIMARY KEY (id),
   KEY idx_submissions_user_quiz (user_id, quiz_id),
