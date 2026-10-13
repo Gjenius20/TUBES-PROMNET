@@ -47,7 +47,7 @@ This repository houses an **AI-Powered Code Assessment & Autograder Platform** b
 │   ├── services/             # Core business logic & external integrations
 │   │   ├── ai/               # Gemini/OpenAI prompt processing & parsing
 │   │   ├── autograder/       # Tolerance matcher & output evaluation
-│   │   └── piston/           # Submission proxy to Piston Sandbox API
+│   │   └── docker/           # Submission execution via Docker (gcc:12)
 │   └── utils/                # Helper functions, JWT signing, password hashing
 ├── migrations/               # Database SQL schema migration files (001_init.sql)
 ├── web/                      # ReactJS Frontend (Vite workspace)
@@ -63,7 +63,7 @@ This repository houses an **AI-Powered Code Assessment & Autograder Platform** b
 │   └── vite.config.js        # Vite bundler configuration
 ├── .air.toml                 # Air live-reload configuration
 ├── .env.example              # Sample environment variables template
-├── docker-compose.yml        # Docker compose configuration for MySQL & Piston
+├── docker-compose.yml        # Docker compose configuration for MySQL
 ├── Dockerfile                # Production Docker build container
 ├── go.mod                    # Go module dependencies
 └── go.sum                    # Go checksum verification (dibuat oleh `go mod tidy`)
@@ -85,11 +85,11 @@ Request
 [ Controller Layer ] (HTTP Parameter Parsing, DTO Validation)
   │
   ▼
-[ Service Layer ] (Business Logic, AI Prompting, Piston Proxying)
+[ Service Layer ] (Business Logic, AI Prompting, Docker Execution)
   │
   ├─► [ Repository Layer ] (GORM Database Abstraction ──► MySQL)
   ├─► [ AI Engine ]       (Gemini API Test Case Generator)
-  └─► [ Execution Engine ] (Piston API Compiler Sandbox)
+  └─► [ Execution Engine ] (Docker gcc:12 Sandbox)
 ```
 
 ---
@@ -107,8 +107,8 @@ Request
 1. Student writes C code in **Monaco Editor** and submits solution.
 2. Request hits `/api/v1/submissions` with `quiz_id` and `source_code`.
 3. Backend fetches problem testcases from database.
-4. Backend proxies `source_code` + `stdin` payload to **Piston Sandbox API**.
-5. Piston returns execution `stdout` / `stderr`.
+4. Backend executes `source_code` + `stdin` in **Docker container (gcc:12)**.
+5. Docker returns execution `stdout` / `stderr`.
 6. **Tolerance Matcher Engine** compares student `stdout` against `expected_output` using sequence & keyword matching logic.
 7. Evaluation score & status (`PASSED`, `WRONG_ANSWER`, `COMPILE_ERROR`) are recorded in MySQL.
 
@@ -180,7 +180,7 @@ Request
   ```
 
 ### Local Services (Docker)
-* **Start local MySQL & Piston containers:**
+* **Start local MySQL container:**
   ```bash
   docker-compose up -d
   ```
@@ -198,7 +198,7 @@ Install the following tools:
 - Go (version compatible with `go.mod`)
 - Node.js and npm
 - MySQL 8.0+
-- Docker and Docker Compose (recommended for local MySQL and Piston)
+- Docker and Docker Compose (recommended for local MySQL)
 - Git
 - Air for Go live reload during development
 
@@ -339,8 +339,6 @@ npm run lint
 Before considering the setup complete, verify that:
 
 - MySQL is reachable using `DB_DSN`.
-- Judge0 is reachable using `JUDGE0_API_URL`.
-+ - Piston is reachable using `PISTON_API_URL`.
 - Required AI credentials are present.
 - The backend starts successfully with `air`.
 - The frontend starts successfully with `npm run dev`.
@@ -372,13 +370,11 @@ The backend relies on the following configuration keys (template available in `.
 
 | Variable Name | Purpose | Required | Example Placeholder |
 | :--- | :--- | :--- | :--- |
-| `PORT` | Server listening port | No (Default: 8080) | `8080` |
-| `DB_DSN` | MySQL connection string DSN | Yes | `user:pass@tcp(127.0.0.1:3306)/autograder_db?parseTime=true` |
+| `PORT` | Server listening port | No (Default: 1111) | `1111` |
+| `DB_DSN` | MySQL connection string DSN | Yes | `autograder:autograder_pass@tcp(127.0.0.1:3306)/autograder_db?parseTime=true&charset=utf8mb4&loc=Local` |
 | `JWT_SECRET` | Secret key for signing Access Tokens | Yes | `<your-jwt-access-secret>` |
 | `JWT_REFRESH_SECRET` | Secret key for Refresh Tokens | Yes | `<your-jwt-refresh-secret>` |
 | `GEMINI_API_KEY` | Google Gemini AI API Key | Yes | `<your-gemini-api-key>` |
-| `JUDGE0_API_URL` | Base URL of Judge0 execution sandbox | Yes | `http://localhost:2358` |
-+| `PISTON_API_URL` | Base URL of Piston execution sandbox | Yes | `http://localhost:2000` |
 | `CORS_ALLOWED_ORIGINS` | Comma-separated trusted frontend origins (never `*`) | No (Default: `http://localhost:5173`) | `http://localhost:5173` |
 | `COOKIE_SECURE` | Mark refresh-token cookie as `Secure` (set `true` behind HTTPS) | No (Default: `false`) | `false` |
 | `GEMINI_MODEL` | Gemini model used for testcase generation | No (Default: `gemini-2.5-flash`) | `gemini-2.5-flash` |
@@ -454,13 +450,13 @@ Frontend (`web/.env`, optional): `VITE_API_URL` (default `http://localhost:8080/
 * Cross-Origin Resource Sharing (CORS) restricted to trusted frontend domain.
 * Password hashing with bcrypt before database persistence.
 * SQL Injection protection enforced via GORM parameterized queries.
-* Execution sandboxing offloaded to Piston API to prevent remote code execution (RCE) on backend server host.
+* Execution sandboxing offloaded to Docker containers (`gcc:12`) to prevent remote code execution (RCE) on backend server host.
 
 ---
 
 ## Important Invariants
 
-1. **Sandboxed Code Execution:** NEVER compile or run untrusted user C code directly on the host machine running the Gin server. All executions MUST go through Piston API.
+1. **Sandboxed Code Execution:** NEVER compile or run untrusted user C code directly on the host machine running the Gin server. All executions MUST go through Docker containers (`gcc:12` image).
 2. **AI Test Case Output:** AI Testcase responses MUST be validated as proper JSON arrays matching the strict schema before storing in MySQL.
 3. **Database Relationships:** Quiz records MUST be deleted with cascading deletes on associated `TestCases` and `Submissions`.
 4. **JWT Security:** Access token verification MUST be enforced on all routes except `/auth/login`, `/auth/register`, and `/auth/refresh`.
@@ -503,5 +499,5 @@ Frontend (`web/.env`, optional): `VITE_API_URL` (default `http://localhost:8080/
 - [ ] All database migration files match GORM models.
 - [ ] No hardcoded secrets or API keys exist in source code.
 - [ ] JWT authentication middleware wraps protected endpoints.
-- [ ] Judge0 proxy handles network timeout and connection failure gracefully.
+- [ ] Docker execution handles network timeout and connection failure gracefully.
 - [ ] Frontend Axios interceptor correctly handles token refresh on 401 response status.
