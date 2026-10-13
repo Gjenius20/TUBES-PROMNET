@@ -10,6 +10,7 @@ import (
 
 type UserRepository interface {
 	ListStudents(ctx context.Context) ([]models.User, error)
+	ListStudentsPaginated(ctx context.Context, search string, page, limit int) ([]models.User, int64, error)
 	Create(ctx context.Context, user *models.User) error
 	FindByEmail(ctx context.Context, email string) (*models.User, error)
 	FindByNIM(ctx context.Context, nim string) (*models.User, error)
@@ -61,4 +62,27 @@ func (r *userRepository) FindByID(ctx context.Context, id uint) (*models.User, e
 		return nil, translate(err)
 	}
 	return &user, nil
+}
+
+func (r *userRepository) ListStudentsPaginated(ctx context.Context, search string, page, limit int) ([]models.User, int64, error) {
+	var users []models.User
+	var total int64
+
+	q := r.db.WithContext(ctx).Model(&models.User{}).Where("role = ?", models.RoleStudent)
+
+	if search != "" {
+		like := "%" + search + "%"
+		q = q.Where("name LIKE ? OR email LIKE ? OR nim LIKE ?", like, like, like)
+	}
+
+	if err := q.Count(&total).Error; err != nil {
+		return nil, 0, translate(err)
+	}
+
+	offset := (page - 1) * limit
+	if err := q.Offset(offset).Limit(limit).Order("id ASC").Find(&users).Error; err != nil {
+		return nil, 0, translate(err)
+	}
+
+	return users, total, nil
 }

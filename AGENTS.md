@@ -24,6 +24,8 @@ This repository houses an **AI-Powered Code Assessment & Autograder Platform** b
 | **Config & Environment** | `godotenv` | Environment variable reader for `.env` files |
 | **AI Integration** | Google GenAI SDK (Gemini API) / OpenAI SDK | Automated testcase generation engine |
 | **Code Execution Engine**| Docker (gcc:12) | Isolated sandbox container for C code compilation & run |
+| **Excel Generation** | `github.com/xuri/excelize/v2` | Streaming XLSX generation for reports/grades |
+| **Database Seeding** | Custom CLI (`cmd/seed`) | Idempotent dummy data generation for development |
 
 ---
 
@@ -85,11 +87,12 @@ Request
 [ Controller Layer ] (HTTP Parameter Parsing, DTO Validation)
   │
   ▼
-[ Service Layer ] (Business Logic, AI Prompting, Docker Execution)
+[ Service Layer ] (Business Logic, AI Prompting, Docker Execution, Excel Generation)
   │
   ├─► [ Repository Layer ] (GORM Database Abstraction ──► MySQL)
   ├─► [ AI Engine ]       (Gemini API Test Case Generator)
-  └─► [ Execution Engine ] (Docker gcc:12 Sandbox)
+  ├─► [ Execution Engine ] (Docker gcc:12 Sandbox)
+  └─► [ Report Engine ]    (excelize/v2 Streaming XLSX)
 ```
 
 ---
@@ -111,6 +114,20 @@ Request
 5. Docker returns execution `stdout` / `stderr`.
 6. **Tolerance Matcher Engine** compares student `stdout` against `expected_output` using sequence & keyword matching logic.
 7. Evaluation score & status (`PASSED`, `WRONG_ANSWER`, `COMPILE_ERROR`) are recorded in MySQL.
+
+### 3. Admin Dashboard & Reporting Flow
+1. Admin manages Courses, Quizzes, and Student Enrollments via Admin Dashboard.
+2. **Bulk Enrollment**: Admin searches students (by NIM/Name/Email), selects multiple, and enrolls them to a course in one action (`POST /admin/courses/:id/enroll-bulk`).
+3. **Progress Tracking**: Admin toggles progress view per course to see student completion % and average scores.
+4. **Export Grades/Progress**: Admin downloads Excel reports (`GET /admin/courses/:id/export-grades`, `GET /admin/courses/:id/export-excel`) generated via `excelize/v2` streaming to HTTP response.
+5. **Student Removal**: Admin removes student from course (`DELETE /admin/courses/:id/enrollments/:student_id`) with CASCADE delete handling via DB constraints.
+
+### 4. Database Seeding (Development)
+Run `go run ./cmd/seed/main.go` to populate DB with:
+- 1 Admin user (`admin@cgrader.local` / `admin123`)
+- 5 Student users (`password123`)
+- 2 Courses with 3 Quizzes & Testcases
+- Enrollments & Random Submissions (PASSED/WRONG_ANSWER)
 
 ---
 

@@ -1,0 +1,416 @@
+{
+  "cmd/createadmin/main.go": {
+    "mtime": 1791857123.7533967,
+    "seen": 1791882399.165459,
+    "ast_hash": "2fa0b2faf209517bee4431b7af5a9768",
+    "semantic_hash": "2fa0b2faf209517bee4431b7af5a9768"
+  },
+  "cmd/server/main.go": {
+    "mtime": 1791867432.348413,
+    "seen": 1791882399.1654649,
+    "ast_hash": "852e7829291e8dd52b54d443a3570ac4",
+    "semantic_hash": "852e7829291e8dd52b54d443a3570ac4"
+  },
+  "cmd/server/routes.go": {
+    "mtime": 1791869400.3935323,
+    "seen": 1791882399.1654675,
+    "ast_hash": "b723f78fdb2ec9c9d9bb1a8f5d4221c3",
+    "semantic_hash": "b723f78fdb2ec9c9d9bb1a8f5d4221c3"
+  },
+  "go.mod": {
+    "mtime": 1791838134.2608945,
+    "seen": 1791882399.1654692,
+    "ast_hash": "6ba0b690096566a35aee5a4f2d757715",
+    "semantic_hash": "6ba0b690096566a35aee5a4f2d757715"
+  },
+  "internal/config/config.go": {
+    "mtime": 1791836786.9355872,
+    "seen": 1791882399.1654713,
+    "ast_hash": "a1a80fb2eb313cd30c8b627a60abb8a7",
+    "semantic_hash": "a1a80fb2eb313cd30c8b627a60abb8a7"
+  },
+  "internal/config/database.go": {
+    "mtime": 1791816737.6369014,
+    "seen": 1791832002.3285046,
+    "ast_hash": "df6e8615f66e29067b69cbe46ab3ffc5",
+    "semantic_hash": "df6e8615f66e29067b69cbe46ab3ffc5"
+  },
+  "internal/controllers/auth_controller.go": {
+    "mtime": 1791838870.0432374,
+    "seen": 1791882399.1658638,
+    "ast_hash": "a8c3f5d94b39373bbda229083d3500ef",
+    "semantic_hash": "a8c3f5d94b39373bbda229083d3500ef"
+  },
+  "internal/controllers/course_controller.go": {
+    "mtime": 1791869201.6133814,
+    "seen": 1791882399.1658654,
+    "ast_hash": "3e08543acfcab1a3796a598697c4042a",
+    "semantic_hash": "3e08543acfcab1a3796a598697c4042a"
+  },
+  "internal/controllers/dto.go": {
+    "mtime": 1791843429.1044345,
+    "seen": 1791882399.1658676,
+    "ast_hash": "de72ab2279285910980b6d6b733ac463",
+    "semantic_hash": "de72ab2279285910980b6d6b733ac463"
+  },
+  "internal/controllers/helpers.go": {
+    "mtime": 1791816737.666671,
+    "seen": 1791832002.3285098,
+    "ast_hash": "b0bdb8f580b98a40c61c6bfbcb52df87",
+    "semantic_hash": "b0bdb8f580b98a40c61c6bfbcb52df87"
+  },
+  "internal/controllers/quiz_controller.go": {
+    "mtime": 1791816737.671188,
+    "seen": 1791832002.328511,
+    "ast_hash": "78d26a5848300123a26bebdba2c42d47",
+    "semantic_hash": "78d26a5848300123a26bebdba2c42d47"
+  },
+  "internal/controllers/submission_controller.go": {
+    "mtime": 1791816737.6782186,
+    "seen": 1791832002.3285122,
+    "ast_hash": "f40713e9afcfed446afe397c0149039c",
+    "semantic_hash": "f40713e9afcfed446afe397c0149039c"
+  },
+  "internal/middleware/auth.go": {
+    "mtime": 1791816737.6882582,
+    "seen": 1791832002.3285134,
+    "ast_hash": "6469207e4bd5a956ac9a5e7b672dc21b",
+    "semantic_hash": "6469207e4bd5a956ac9a5e7b672dc21b"
+  },
+  "internal/middleware/cors.go": {
+    "mtime": 1791835504.5511122,
+    "seen": 1791882399.1668823,
+    "ast_hash": "a304c59b975de833c70aaa341db19ca4",
+    "semantic_hash": "a304c59b975de833c70aaa341db19ca4"
+  },
+  "internal/middleware/ratelimit.go": {
+    "mtime": 1791816737.7004051,
+    "seen": 1791832002.3285155,
+    "ast_hash": "327762624eccc202f48ea1164f3dcec7",
+    "semantic_hash": "327762624eccc202f48ea1164f3dcec7"
+  },
+  "internal/middleware/recovery.go": {
+    "mtime": 1791816737.7068338,
+    "seen": 1791832002.328517,
+    "ast_hash": "dbfb85db89c837c8816708abcdce6f43",
+    "semantic_hash": "dbfb85db89c837c8816708abcdce6f43"
+  },
+  "internal/models/models.go": {
+    "mtime": 1791866712.1474128,
+    "seen": 1791882399.1674001,
+    "ast_hash": "4dc6bfaa2bbd884ed8091871701dabed",
+    "semantic_hash": "4dc6bfaa2bbd884ed8091871701dabed"
+  },
+  "internal/repositories/course_repository.go": {
+    "mtime": 1791838811.9659371,
+    "seen": 1791882399.1674023,
+    "ast_hash": "8c6ed1feb6f279aad8aa1c659e758ab3",
+    "semantic_hash": "8c6ed1feb6f279aad8aa1c659e758ab3"
+  },
+  "internal/repositories/errors.go": {
+    "mtime": 1791816737.7327776,
+    "seen": 1791832002.3285205,
+    "ast_hash": "e86660e4862221c14706ddb29974fb87",
+    "semantic_hash": "e86660e4862221c14706ddb29974fb87"
+  },
+  "internal/repositories/quiz_repository.go": {
+    "mtime": 1791816737.7393062,
+    "seen": 1791832002.3285217,
+    "ast_hash": "24bdfa87d5ca265919b2cb2064e35801",
+    "semantic_hash": "24bdfa87d5ca265919b2cb2064e35801"
+  },
+  "internal/repositories/submission_repository.go": {
+    "mtime": 1791838585.5823154,
+    "seen": 1791882399.1679409,
+    "ast_hash": "1f8d84c347148f7b9910a960a942ee96",
+    "semantic_hash": "1f8d84c347148f7b9910a960a942ee96"
+  },
+  "internal/repositories/testcase_repository.go": {
+    "mtime": 1791816737.751341,
+    "seen": 1791832002.3285239,
+    "ast_hash": "9e77510aeef242aaf36d96c4f02f15c4",
+    "semantic_hash": "9e77510aeef242aaf36d96c4f02f15c4"
+  },
+  "internal/repositories/user_repository.go": {
+    "mtime": 1791838708.5804684,
+    "seen": 1791882399.1681955,
+    "ast_hash": "4e00ee66094917f525aa36f98138f2d8",
+    "semantic_hash": "4e00ee66094917f525aa36f98138f2d8"
+  },
+  "internal/services/ai/gemini.go": {
+    "mtime": 1791816737.8016052,
+    "seen": 1791832002.3285265,
+    "ast_hash": "635e1be4b1535522daf9fb9a8f6307f9",
+    "semantic_hash": "635e1be4b1535522daf9fb9a8f6307f9"
+  },
+  "internal/services/ai/parser.go": {
+    "mtime": 1791816737.8066125,
+    "seen": 1791832002.328528,
+    "ast_hash": "5f21894cd5a2345669db1a173cae352e",
+    "semantic_hash": "5f21894cd5a2345669db1a173cae352e"
+  },
+  "internal/services/ai/parser_test.go": {
+    "mtime": 1791816737.813661,
+    "seen": 1791832002.328529,
+    "ast_hash": "b3f5bccf11afdd08c139266f5adf0f42",
+    "semantic_hash": "b3f5bccf11afdd08c139266f5adf0f42"
+  },
+  "internal/services/auth_service.go": {
+    "mtime": 1791837745.9242492,
+    "seen": 1791882399.1690483,
+    "ast_hash": "57f4229f727be93f1add1dac993ceaff",
+    "semantic_hash": "57f4229f727be93f1add1dac993ceaff"
+  },
+  "internal/services/autograder/matcher.go": {
+    "mtime": 1791868774.0393114,
+    "seen": 1791882399.1690507,
+    "ast_hash": "1c7c9fff918bb976c84ae2d8c8cb8614",
+    "semantic_hash": "1c7c9fff918bb976c84ae2d8c8cb8614"
+  },
+  "internal/services/autograder/matcher_test.go": {
+    "mtime": 1791816737.8302045,
+    "seen": 1791832002.3285325,
+    "ast_hash": "b2688fc56d84b8e212039102fad73dcd",
+    "semantic_hash": "b2688fc56d84b8e212039102fad73dcd"
+  },
+  "internal/services/course_service.go": {
+    "mtime": 1791869068.9347618,
+    "seen": 1791882399.1693318,
+    "ast_hash": "6f9619fabd2a3b2da5c2543ba19839ac",
+    "semantic_hash": "6f9619fabd2a3b2da5c2543ba19839ac"
+  },
+  "internal/services/docker/client.go": {
+    "mtime": 1791816737.8413055,
+    "seen": 1791832002.328535,
+    "ast_hash": "3c618a814bf05ef62e58af23f4d58663",
+    "semantic_hash": "3c618a814bf05ef62e58af23f4d58663"
+  },
+  "internal/services/errors.go": {
+    "mtime": 1791837756.9230287,
+    "seen": 1791882399.1696126,
+    "ast_hash": "dcdabae3e87d41f871c2c8fff02fa305",
+    "semantic_hash": "dcdabae3e87d41f871c2c8fff02fa305"
+  },
+  "internal/services/quiz_service.go": {
+    "mtime": 1791816737.7860653,
+    "seen": 1791832002.3285372,
+    "ast_hash": "6ea4bbbd2da109f6b219cf33a403bec2",
+    "semantic_hash": "6ea4bbbd2da109f6b219cf33a403bec2"
+  },
+  "internal/services/submission_service.go": {
+    "mtime": 1791816737.791576,
+    "seen": 1791832002.3285384,
+    "ast_hash": "b006cc4cf39f3e738d4e4c15091a17de",
+    "semantic_hash": "b006cc4cf39f3e738d4e4c15091a17de"
+  },
+  "internal/utils/jwt.go": {
+    "mtime": 1791816737.8638337,
+    "seen": 1791832002.3285394,
+    "ast_hash": "9795341459071368d50db5123899d4b0",
+    "semantic_hash": "9795341459071368d50db5123899d4b0"
+  },
+  "internal/utils/password.go": {
+    "mtime": 1791816737.869338,
+    "seen": 1791832002.3285406,
+    "ast_hash": "06cd8afe45ec6dc09024c01382485fe1",
+    "semantic_hash": "06cd8afe45ec6dc09024c01382485fe1"
+  },
+  "internal/utils/response.go": {
+    "mtime": 1791816737.8768554,
+    "seen": 1791832002.3285418,
+    "ast_hash": "ff314c044af40da93915209c598ae3a1",
+    "semantic_hash": "ff314c044af40da93915209c598ae3a1"
+  },
+  "internal/utils/validation.go": {
+    "mtime": 1791816737.8838885,
+    "seen": 1791832002.328543,
+    "ast_hash": "7a9b04a34b330b5f7ffaec9f85e06e4a",
+    "semantic_hash": "7a9b04a34b330b5f7ffaec9f85e06e4a"
+  },
+  "web/eslint.config.js": {
+    "mtime": 1791816737.908441,
+    "seen": 1791832002.328544,
+    "ast_hash": "c1b7d2fe09408e84cf4feecb0055f57e",
+    "semantic_hash": "c1b7d2fe09408e84cf4feecb0055f57e"
+  },
+  "web/package.json": {
+    "mtime": 1791816737.9315155,
+    "seen": 1791832002.328545,
+    "ast_hash": "200f6a30dec0eb78323e23261cb067a9",
+    "semantic_hash": "200f6a30dec0eb78323e23261cb067a9"
+  },
+  "web/postcss.config.js": {
+    "mtime": 1791816737.9370408,
+    "seen": 1791832002.3285463,
+    "ast_hash": "ef3ba2a81ba19f8ea5ddf625521e96f0",
+    "semantic_hash": "ef3ba2a81ba19f8ea5ddf625521e96f0"
+  },
+  "web/src/components/AppLayout.jsx": {
+    "mtime": 1791816737.9958446,
+    "seen": 1791832002.3285475,
+    "ast_hash": "364e626d27a0184b0de055f31aab4736",
+    "semantic_hash": "364e626d27a0184b0de055f31aab4736"
+  },
+  "web/src/components/CodeEditor.jsx": {
+    "mtime": 1791816738.0038893,
+    "seen": 1791832002.3285487,
+    "ast_hash": "b8e021b56309ab514357f378f7c838fc",
+    "semantic_hash": "b8e021b56309ab514357f378f7c838fc"
+  },
+  "web/src/components/FormField.jsx": {
+    "mtime": 1791816738.0129056,
+    "seen": 1791832002.32855,
+    "ast_hash": "c400969c722f5ed22ea92c107e000b2d",
+    "semantic_hash": "c400969c722f5ed22ea92c107e000b2d"
+  },
+  "web/src/components/StatusBadge.jsx": {
+    "mtime": 1791816738.0214307,
+    "seen": 1791832002.3285515,
+    "ast_hash": "2c853723016dac79f82ef6ee26e6abaf",
+    "semantic_hash": "2c853723016dac79f82ef6ee26e6abaf"
+  },
+  "web/src/components/VerdictStrip.jsx": {
+    "mtime": 1791816738.0294719,
+    "seen": 1791832002.3285525,
+    "ast_hash": "3ec84abcd225f19444dec6825fdf9c60",
+    "semantic_hash": "3ec84abcd225f19444dec6825fdf9c60"
+  },
+  "web/src/hooks/useAuth.js": {
+    "mtime": 1791816738.0395663,
+    "seen": 1791832002.3285537,
+    "ast_hash": "7128d88de59486fa1465e3402fbcd91e",
+    "semantic_hash": "7128d88de59486fa1465e3402fbcd91e"
+  },
+  "web/src/hooks/useCourses.js": {
+    "mtime": 1791872827.210451,
+    "seen": 1791882399.1735024,
+    "ast_hash": "83f0cde0c4e0b62fb428c8affc5f0233",
+    "semantic_hash": "83f0cde0c4e0b62fb428c8affc5f0233"
+  },
+  "web/src/hooks/useQuizzes.js": {
+    "mtime": 1791816738.0512257,
+    "seen": 1791832002.3285558,
+    "ast_hash": "54b41ae8a171461022dcb64e721a9e89",
+    "semantic_hash": "54b41ae8a171461022dcb64e721a9e89"
+  },
+  "web/src/main.jsx": {
+    "mtime": 1791816737.9691594,
+    "seen": 1791832002.328557,
+    "ast_hash": "dd036266bbcff9a1e3bd58e92a727167",
+    "semantic_hash": "dd036266bbcff9a1e3bd58e92a727167"
+  },
+  "web/src/pages/AdminPage.jsx": {
+    "mtime": 1791873911.0637064,
+    "seen": 1791882399.174058,
+    "ast_hash": "7bea763c6d7f70f0799d1d8e3e5565d8",
+    "semantic_hash": "7bea763c6d7f70f0799d1d8e3e5565d8"
+  },
+  "web/src/pages/AdminQuizPage.jsx": {
+    "mtime": 1791816738.0728822,
+    "seen": 1791832002.3285596,
+    "ast_hash": "bf6b5b89dcceabdee908d53ea47f7436",
+    "semantic_hash": "bf6b5b89dcceabdee908d53ea47f7436"
+  },
+  "web/src/pages/CoursePage.jsx": {
+    "mtime": 1791873031.6972651,
+    "seen": 1791882399.1743188,
+    "ast_hash": "5b3ce71574b6218a1d124fd046457376",
+    "semantic_hash": "5b3ce71574b6218a1d124fd046457376"
+  },
+  "web/src/pages/CoursesPage.jsx": {
+    "mtime": 1791816738.0884418,
+    "seen": 1791832002.328562,
+    "ast_hash": "b4fb02d9568f8cd90d2c9a0ecd9fc670",
+    "semantic_hash": "b4fb02d9568f8cd90d2c9a0ecd9fc670"
+  },
+  "web/src/pages/LoginPage.jsx": {
+    "mtime": 1791839113.612145,
+    "seen": 1791882399.174798,
+    "ast_hash": "694e2d8ea20e85a41223316ebfab709d",
+    "semantic_hash": "694e2d8ea20e85a41223316ebfab709d"
+  },
+  "web/src/pages/RegisterPage.jsx": {
+    "mtime": 1791839024.3211596,
+    "seen": 1791882399.174801,
+    "ast_hash": "db58ff6f5ef83ad963948f60400c6b07",
+    "semantic_hash": "db58ff6f5ef83ad963948f60400c6b07"
+  },
+  "web/src/pages/WorkspacePage.jsx": {
+    "mtime": 1791816738.1148038,
+    "seen": 1791832002.3285656,
+    "ast_hash": "b6d29d88f456685854ce42a8922e85ef",
+    "semantic_hash": "b6d29d88f456685854ce42a8922e85ef"
+  },
+  "web/src/queryClient.js": {
+    "mtime": 1791816737.9756832,
+    "seen": 1791832002.328567,
+    "ast_hash": "aae8294d63effbdb3086f091959925e3",
+    "semantic_hash": "aae8294d63effbdb3086f091959925e3"
+  },
+  "web/src/router.jsx": {
+    "mtime": 1791816737.9827309,
+    "seen": 1791832002.3285682,
+    "ast_hash": "c19f1b40f4239ccb7c86b775a21e3e02",
+    "semantic_hash": "c19f1b40f4239ccb7c86b775a21e3e02"
+  },
+  "web/src/services/api.js": {
+    "mtime": 1791816738.1248825,
+    "seen": 1791832002.3285694,
+    "ast_hash": "bb7d76a6060db44d77439451b2a911d7",
+    "semantic_hash": "bb7d76a6060db44d77439451b2a911d7"
+  },
+  "web/src/store/authStore.js": {
+    "mtime": 1791816738.1359594,
+    "seen": 1791832002.3285706,
+    "ast_hash": "f38ec0aa93c276172eb8609fddf42784",
+    "semantic_hash": "f38ec0aa93c276172eb8609fddf42784"
+  },
+  "web/tailwind.config.js": {
+    "mtime": 1791816737.9440656,
+    "seen": 1791832002.3285716,
+    "ast_hash": "d1ae49138ed96a05080e3ed6a24d4f39",
+    "semantic_hash": "d1ae49138ed96a05080e3ed6a24d4f39"
+  },
+  "web/vite.config.js": {
+    "mtime": 1791816737.949573,
+    "seen": 1791832002.328573,
+    "ast_hash": "c2788ad88c1239dd29d07f31ee6c6504",
+    "semantic_hash": "c2788ad88c1239dd29d07f31ee6c6504"
+  },
+  "internal/controllers/enrollment_controller.go": {
+    "mtime": 1791868427.9208608,
+    "seen": 1791882399.165869,
+    "ast_hash": "ec5065236d4db23cead2f8874ed636b8",
+    "semantic_hash": "ec5065236d4db23cead2f8874ed636b8"
+  },
+  "internal/middleware/enrollment.go": {
+    "mtime": 1791867996.2548552,
+    "seen": 1791882399.1668847,
+    "ast_hash": "4f899c54a12c9fe7f6289fb9fff00ba8",
+    "semantic_hash": "4f899c54a12c9fe7f6289fb9fff00ba8"
+  },
+  "internal/repositories/enrollment_repository.go": {
+    "mtime": 1791867006.5177104,
+    "seen": 1791882399.1674037,
+    "ast_hash": "28fab2640e6c1299c94d3f4b779da9d5",
+    "semantic_hash": "28fab2640e6c1299c94d3f4b779da9d5"
+  },
+  "internal/services/enrollment_service.go": {
+    "mtime": 1791867085.6855457,
+    "seen": 1791882399.16961,
+    "ast_hash": "013b08ac3343493863d817e870930996",
+    "semantic_hash": "013b08ac3343493863d817e870930996"
+  },
+  "internal/services/piston/client.go": {
+    "mtime": 1791836775.0281396,
+    "seen": 1791882399.1696148,
+    "ast_hash": "ad4385a22c336000e052cee4f776634e",
+    "semantic_hash": "ad4385a22c336000e052cee4f776634e"
+  },
+  "web/src/hooks/useProgress.js": {
+    "mtime": 1791839186.263776,
+    "seen": 1791882399.1735048,
+    "ast_hash": "b75102d36543e8e3e755ec5aaa173e7b",
+    "semantic_hash": "b75102d36543e8e3e755ec5aaa173e7b"
+  }
+}

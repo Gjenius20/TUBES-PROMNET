@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -107,7 +108,17 @@ function QuizForm({ courses }) {
 }
 
 function CourseAdminItem({ course, deleteCourse, deleteQuiz }) {
-  const { data, fetchProgress, exportExcel } = useCourseProgress(course.id)
+  const { data, fetchProgress, exportExcel, isLoading } = useCourseProgress(course.id)
+  const [showProgress, setShowProgress] = useState(false)
+
+  const handleToggleProgress = () => {
+    if (showProgress) {
+      setShowProgress(false)
+    } else {
+      setShowProgress(true)
+      fetchProgress()
+    }
+  }
 
   return (
     <div key={course.id} className="panel p-4">
@@ -117,7 +128,9 @@ function CourseAdminItem({ course, deleteCourse, deleteQuiz }) {
           <p className="text-sm text-ink-soft">{course.description}</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={fetchProgress} className="btn-secondary text-xs">Progress</button>
+          <button onClick={handleToggleProgress} className="btn-secondary text-xs" disabled={isLoading}>
+            {showProgress ? 'Sembunyikan Progress' : 'Tampilkan Progress'}
+          </button>
           <button onClick={exportExcel} className="btn-primary text-xs">Excel</button>
           <button
             type="button"
@@ -133,7 +146,7 @@ function CourseAdminItem({ course, deleteCourse, deleteQuiz }) {
         </div>
       </div>
       
-      {data && (
+      {showProgress && data && (
         <div className="mt-4 text-xs">
           <table className="w-full border-collapse">
             <thead>

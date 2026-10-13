@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flow Aplikasi Autograder Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0f1a;
+            --bg-elevated: #111827;
+            --fg: #e5e7eb;
+            --muted: #6b7280;
+            --accent: #22d3ee;
+            --accent-dim: #06b6d4;
+            --card: #1a2234;
+            --border: #2a3447;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+        
+        * { box-sizing: border-box; }
+        
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg);
+            color: var(--fg);
+            min-height: 100vh;
+            margin: 0;
+        }
+        
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+        
+        /* Mermaid theme override */
+        .mermaid {
+            background: transparent !important;
+        }
+        
+        .mermaid .node rect,
+        .mermaid .node circle,
+        .mermaid .node ellipse,
+        .mermaid .node polygon,
+        .mermaid .node path {
+            fill: var(--card) !important;
+            stroke: var(--accent) !important;
+            stroke-width: 2px;
+            rx: 8px;
+            ry: 8px;
+        }
+        
+        .mermaid .edgePath .path {
+            stroke: var(--accent-dim) !important;
+            stroke-width: 2px;
+        }
+        
+        .mermaid .edgeLabel {
+            background: var(--bg-elevated) !important;
+            color: var(--accent) !important;
+            font-family: 'JetBrains Mono', monospace !important;
+            font-size: 11px !important;
+            padding: 2px 6px !important;
+            border-radius: 4px !important;
+        }
+        
+        .mermaid .labelText {
+            fill: var(--fg) !important;
+            font-family: 'Space Grotesk', sans-serif !important;
+            font-size: 13px !important;
+            font-weight: 500 !important;
+        }
+        
+        .mermaid .node text {
+            fill: var(--fg) !important;
+        }
+        
+        .mermaid .cluster rect {
+            fill: var(--bg-elevated) !important;
+            stroke: var(--border) !important;
+            stroke-dasharray: 5,5 !important;
+            rx: 12px !important;
+            ry: 12px !important;
+        }
+        
+        .mermaid .cluster text {
+            fill: var(--accent) !important;
+            font-family: 'Space Grotesk', sans-serif !important;
+            font-weight: 600 !important;
+            font-size: 14px !important;
+        }
+        
+        .flow-container {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            overflow: auto;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            font-weight: 500;
+            color: var(--muted);
+            background: transparent;
+            border-top: none;
+            border-left: none;
+            border-right: none;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 14px;
+        }
+        
+        .tab.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+        
+        .tab:hover:not(.active) {
+            color: var(--fg);
+        }
+        
+        .tab-panel {
+            display: none;
+        }
+        
+        .tab-panel.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: var(--bg-elevated);
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+        
+        .code-block {
+            background: #051020;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            overflow-x: auto;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+        
+        .token-keyword { color: #c084fc; }
+        .token-function { color: #60a5fa; }
+        .token-string { color: #4ade80; }
+        .token-comment { color: #6b7280; }
+        .token-number { color: #fbbf24; }
+        .token-operator { color: #f472b6; }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+        }
+        
+        .stat-card {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--accent);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .stat-label {
+            color: var(--muted);
+            font-size: 13px;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body class="p-6 md:p-10">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <header class="mb-10">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                        <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-3xl md:text-4xl font-bold tracking-tight">Flow Aplikasi Autograder</h1>
+                    <p class="text-slate-400 mt-1">Visualisasi arsitektur & alur kerja sistem penilaian otomatis C</p>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Stats Overview -->
+        <div class="stats-grid mb-8">
+            <div class="stat-card">
+                <div class="stat-value">4</div>
+                <div class="stat-label">Lapis Arsitektur (Layered)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">2</div>
+                <div class="stat-label">Alur Utama (Main Flows)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">5</div>
+                <div class="stat-label">Entitas Database</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">3</div>
+                <div class="stat-label">Status Hasil</div>
+            </div>
+        </div>
+        
+        <!-- Tabs -->
+        <div class="flex flex-wrap gap-1 mb-6 border-b border-[var(--border)]" role="tablist">
+            <button class="tab active" role="tab" aria-selected="true" data-tab="architecture">Arsitektur Layered</button>
+            <button class="tab" role="tab" aria-selected="false" data-tab="testcase">Generate Testcase (Admin)</button>
+            <button class="tab" role="tab" aria-selected="false" data-tab="submission">Submission & Grading (Student)</button>
+            <button class="tab" role="tab" aria-selected="false" data-tab="matcher">Tolerance Matcher</button>
+            <button class="tab" role="tab" aria-selected="false" data-tab="db">Skema Database</button>
+            <button class="tab" role="tab" aria-selected="false" data-tab="api">API Endpoints</button>
+        </div>
+        
+        <!-- Panel 1: Architecture -->
+        <div class="tab-panel active" id="panel-architecture" role="tabpanel">
+            <div class="flow-container">
+                <div class="mermaid">
+graph TB
+    subgraph FE["🌐 Frontend (React + Vite)"]
+        direction TB
+        FE1["📝 Monaco Editor<br/>Code Input"]
+        FE2["📊 Dashboard Admin<br/>& Student Workspace"]
+        FE3["⚛️ TanStack Query<br/>State & Cache"]
+        FE4["🔐 Auth Context<br/>JWT Management"]
+    end
+    
+    subgraph MW["🛡️ Middleware Layer (Gin)"]
+        direction TB
+        MW1["CORS Handler"]
+        MW2["JWT Auth Guard<br/>(Access Token Verify)"]
+        MW3["Rate Limiter"]
+        MW4["Global Error Handler"]
+        MW5["Refresh Token<br/>(HttpOnly Cookie)"]
+    end
+    
+    subgraph CTRL["🎮 Controller Layer"]
+        direction TB
+        CTRL1["Auth Controller<br/>Login/Register/Refresh"]
+        CTRL2["Quiz Controller<br/>CRUD + Generate TC"]
+        CTRL3["Submission Controller<br/>Submit Code"]
+        CTRL4["Course Controller<br/>Enrollment/Progress"]
+        CTRL5["Admin Controller<br/>User Management"]
+    end
+    
+    subgraph SVC["⚙️ Service Layer (Business Logic)"]
+        direction TB
+        SVC1["Auth Service<br/>JWT Sign/Verify<br/>Bcrypt Hash"]
+        SVC2["Quiz Service<br/>Problem Mgmt"]
+        SVC3["AI Service<br/>Gemini Testcase Gen"]
+        SVC4["Submission Service<br/>Orchestrator"]
+        SVC5["Autograder Service<br/>Tolerance Matcher"]
+        SVC6["Docker Service<br/>gcc:12 Sandbox"]
+    end
+    
+    subgraph REPO["🗄️ Repository Layer (GORM)"]
+        direction TB
+        REPO1["User Repo"]
+        REPO2["Quiz Repo"]
+        REPO3["TestCase Repo"]
+        REPO4["Submission Repo"]
+        REPO5["Course Repo"]
+    end
+    
+    subgraph EXT["🔌 External Integrations"]
+        direction TB
+        EXT1["MySQL 8.0+"]
+        EXT2["Google Gemini API"]
+        EXT3["Docker Engine<br/>(gcc:12 container)"]
+    end
+    
+    FE --> MW
+    MW --> CTRL
+    CTRL --> SVC
+    SVC --> REPO
+    REPO --> EXT1
+    SVC3 --> EXT2
+    SVC6 --> EXT3
+    SVC4 --> SVC5
+    SVC4 --> SVC6
+    
+    classDef fe fill:#0f172a,stroke:#22d3ee,stroke-width:2px;
+    classDef mw fill:#1e1b4b,stroke:#a78bfa,stroke-width:2px;
+    classDef ctrl fill:#1e3a2f,stroke:#4ade80,stroke-width:2px;
+    classDef svc fill:#3a2a1e,stroke:#fbbf24,stroke-width:2px;
+    classDef repo fill:#1e2a3a,stroke:#38bdf8,stroke-width:2px;
+    classDef ext fill:#2a1e2a,stroke:#f472b6,stroke-width:2px;
+    
+    class FE,FE1,FE2,FE3,FE4 fe;
+    class MW,MW1,MW2,MW3,MW4,MW5 mw;
+    class CTRL,CTRL1,CTRL2,CTRL3,CTRL4,CTRL5 ctrl;
+    class SVC,SVC1,SVC2,SVC3,SVC4,SVC5,SVC6 svc;
+    class REPO,REPO1,REPO2,REPO3,REPO4,REPO5 repo;
+    class EXT,EXT1,EXT2,EXT3 ext;
+                </div>
+            </div>
+            
+            <div class="mt-6 grid md:grid-cols-2 gap-6">
+                <div class="code-block">
+                    <span class="token-comment">// Request Flow Example</span>
+                    <br><span class="token-keyword">POST</span> <span class="token-string">"/api/v1/submissions"</span>
+                    <br><span class="token-comment">// 1. Middleware: JWT Verify → UserID in context</span>
+                    <br><span class="token-comment">// 2. Controller: Bind JSON {quiz_id, source_code}</span>
+                    <br><span class="token-comment">// 3. Service: Fetch testcases → Loop each</span>
+                    <br><span class="token-comment">// 4. Docker: Compile & Run (gcc:12)</span>
+                    <br><span class="token-comment">// 5. Matcher: Compare stdout vs expected</span>
+                    <br><span class="token-comment">// 6. Repo: Save Submission + TestResults</span>
+                    <br><span class="token-comment">// 7. Response: {score, status, details}</span>
+                </div>
+                <div class="code-block">
+                    <span class="token-comment">// Key Design Decisions</span>
+                    <br><span class="token-keyword">✓</span> <span class="token-string">Sandboxed Execution</span> - Docker isolation
+                    <br><span class="token-keyword">✓</span> <span class="token-string">Stateless Auth</span> - JWT Access + Refresh Cookie
+                    <br><span class="token-keyword">✓</span> <span class="token-string">Layered Clean Arch</span> - No DB in controllers
+                    <br><span class="token-keyword">✓</span> <span class="token-string">AI-Generated TC</span> - Gemini structured output
+                    <br><span class="token-keyword">✓</span> <span class="token-string">Tolerance Matching</span> - Whitespace/float tolerant
+                    <br><span class="token-keyword">✓</span> <span class="token-string">Optimistic Locking</span> - Best score tracking
+                </div>
+            </div>
+        </div>
+        
+        <!-- Panel 2: Testcase Generation -->
+        <div class="tab-panel" id="panel-testcase" role="tabpanel">
+            <div class="flow-container">
+                <div class="mermaid">
+sequenceDiagram
+    autonumber
+    actor Admin
+    participant FE as Frontend (Admin Dashboard)
+    participant API as Gin Router
+    participant MQ as Quiz Controller
+    participant QS as Quiz Service
+    participant AI as AI Service (Gemini)
+    participant TC as TestCase Repo
+    participant DB as MySQL
+    
+    Admin->>FE: Input Problem Statement + Constraints
+    FE->>API: POST /api/v1/admin/quizzes/generate-testcases
+    API->>MQ: Validate DTO + Auth (Admin Role)
+    MQ->>QS: GenerateTestcases(quizID, problemStmt)
+    QS->>AI: Build Prompt Template + Problem Data
+    AI->>Gemini: Request JSON Array[TestCase]
+    Gemini-->>AI: {stdin, expected_output}[]
+    AI->>AI: Parse & Validate JSON Schema
+    AI-->>QS: Validated TestCase[]
+    QS->>TC: BulkCreate(testcases)
+    TC->>DB: INSERT batch
+    DB-->>TC: Success
+    TC-->>QS: Created IDs
+    QS-->>MQ: Result
+    MQ-->>API: 200 OK {count, testcases}
+    API-->>FE: Response
+    FE-->>Admin: Show Generated Testcases
+    
+    Note over AI,Gemini: Prompt enforces strict JSON<br/>No markdown, no extra text
+    Note over QS,TC: Cascading delete on Quiz<br/>removes TestCases
+                </div>
+            </div>
+            
+            <div class="mt-6 grid md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-semibold text-cyan-400 mb-3 flex items-center gap-2">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                        Prompt Template Structure
+                    </h4>
+                    <div class="code-block">
+<span class="token-comment">// Internal prompt (services/ai/)</span>
+<span class="token-string">"Generate test cases for C problem:\n</span>
+<span class="token-string">Problem: {statement}\n</span>
+<span class="token-string">Constraints: {constraints}\n</span>
+<span class="token-string">Return ONLY JSON array:\n</span>
+<span class="token-string">[\n</span>
+<span class="token-string">  {\"stdin\": \"input1\\ninput2\", </span>
+<span class="token-string">   \"expected_output\": \"output1\\noutput2\"},\n</span>
+<span class="token-string">  ...\n</span>
+<span class="token-string">]\n</span>
+<span class="token-string">Max 20 cases. Cover edge cases.\""</span>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-cyan-400 mb-3 flex items-center gap-2">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                        Validation Rules
+                    </h4>
+                    <div class="code-block">
+<span class="token-keyword">✓</span> JSON array format strict
+<br><span class="token-keyword">✓</span> Each object: stdin + expected_output
+<br><span class="token-keyword">✓</span> Escape sequences handled (\n, \t)
+<br><span class="token-keyword">✓</span> Max 20 test cases per quiz
+<br><span class="token-keyword">✓</span> Empty stdin allowed (no input)
+<br><span class="token-keyword">✓</span> Duplicate detection before insert
+<br><span class="token-keyword">✗</span> Reject if Gemini returns markdown
+<br><span class="token-keyword">✗</span> Reject if schema mismatch
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Panel 3: Submission & Grading -->
+        <div class="tab-panel" id="panel-submission" role="tabpanel">
+            <div class="flow-container">
+                <div class="mermaid">
+sequenceDiagram
+    autonumber
+    actor Student
+    participant FE as Frontend (Monaco Editor)
+    participant API as Gin Router
+    participant MW as JWT Middleware
+    participant SC as Submission Controller
+    participant SS as Submission Service
+    participant QR as Quiz Repo
+    participant TCR as TestCase Repo
+    participant DS as Docker Service
+    participant AS as Autograder Service
+    participant SR as Submission Repo
+    participant DB as MySQL
+    
+    Student->>FE: Write C Code → Click Submit
+    FE->>API: POST /api/v1/submissions<br/>{quiz_id, source_code}
+    API->>MW: Verify Access Token
+    MW-->>API: UserID in Context
+    API->>SC: Bind & Validate
+    SC->>SS: Submit(userID, quizID, sourceCode)
+    SS->>QR: FindQuiz(quizID)
+    SS->>TCR: ListTestCases(quizID)
+    TCR-->>SS: TestCase[] (stdin, expected)
+    
+    loop For Each TestCase
+        SS->>DS: Run(sourceCode, stdin)
+        DS->>DS: docker run --rm gcc:12<br/>compile + execute
+        DS-->>SS: {stdout, stderr, exitCode, time}
+        
+        alt Compile Error
+            SS->>SS: status=COMPILE_ERROR<br/>break loop
+        else Runtime Error
+            SS->>SS: status=RUNTIME_ERROR<br/>record result
+        else Success
+            SS->>AS: Match(stdout, expected)
+            AS-->>SS: bool (pass/fail)
+            SS->>SS: Record TestResult
+        end
+    end
+    
+    SS->>SS: Calculate Score<br/>passed/total * 100
+    SS->>SS: Determine Final Status
+    SS->>SR: Create(Submission + TestResults)
+    SR->>DB: INSERT (tx)
+    DB-->>SR: Submission ID
+    SR-->>SS: Saved Submission
+    SS-->>SC: Submission DTO
+    SC-->>API: 201 Created
+    API-->>FE: {id, score, status, results[]}
+    FE-->>Student: Show Result Panel
+                </div>
+            </div>
+            
+            <div class="mt-6 grid md:grid-cols-3 gap-4">
+                <div class="legend-item">
+                    <div class="legend-color" style="background:#22c55e"></div>
+                    <span><strong>PASSED</strong> — All test cases match</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background:#f59e0b"></div>
+                    <span><strong>WRONG_ANSWER</strong> — Output mismatch</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background:#ef4444"></div>
+                    <span><strong>COMPILE_ERROR</strong> — GCC failed</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background:#f97316"></div>
+                    <span><strong>RUNTIME_ERROR</strong> — Segfault/TLE/OOM</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background:#6b7280"></div>
+                    <span><strong>PENDING</strong> — Queued (async)</span>
+                </div>
+            </div>
+            
+            <div class="mt-6 code-block">
+<span class="token-comment">// Docker Execution Config (services/docker/)</span>
+<span class="token-keyword">const</span> <span class="token-function">DockerConfig</span> = <span class="token-keyword">struct</span> {
+    <span class="token-string">Image</span>:       <span class="token-string">"gcc:12"</span>
+    <span class="token-string">CompileCmd</span>: <span class="token-string">"gcc -std=c11 -O2 -pipe -o main main.c"</span>
+    <span class="token-string">RunCmd</span>:     <span class="token-string">"./main"</span>
+    <span class="token-string">Timeout</span>:    <span class="token-number">2</span> <span class="token-comment">// seconds</span>
+    <span class="token-string">MemoryLimit</span>: <span class="token-string">"128m"</span>
+    <span class="token-string">CPULimit</span>:   <span class="token-string">"1.0"</span>
+    <span class="token-string">NetworkMode</span>: <span class="token-string">"none"</span> <span class="token-comment">// No internet</span>
+    <span class="token-string">ReadOnlyFS</span>:  <span class="token-keyword">true</span>
+    <span class="token-string">PidsLimit</span>:  <span class="token-number">64</span>
+}
+            </div>
+        </div>
+        
+        <!-- Panel 4: Tolerance Matcher -->
+        <div class="tab-panel" id="panel-matcher" role="tabpanel">
+            <div class="flow-container">
+                <div class="mermaid">
+flowchart TD
+    A[Raw stdout<br/>from Docker] --> B[Normalize()]
+    B --> C[Split by Whitespace<br/>strings.Fields]
+    D[Raw expected_output<br/>from DB] --> E[Normalize()]
+    E --> F[Split by Whitespace<br/>strings.Fields]
+    C --> G{len(actual) == len(expected)?}
+    F --> G
+    G -- No --> H[❌ FAIL: Token count mismatch]
+    G -- Yes --> I[Loop: tokenEqual() each pair]
+    I --> J{Both parse as float?}
+    J -- Yes --> K[|a-b|/max(|a|,|b|) ≤ 1e-6?]
+    K -- Yes --> L[✓ Token Match]
+    K -- No --> M[❌ FAIL: Numeric diff > tolerance]
+    J -- No --> N[a == b exact?]
+    N -- Yes --> L
+    N -- No --> O[❌ FAIL: String mismatch<br/>(case-sensitive)]
+    L --> P{All tokens matched?}
+    P -- Yes --> Q[✅ PASS]
+    P -- No --> R[❌ FAIL]
+    
+    style A fill:#0f172a,stroke:#22d3ee
+    style D fill:#0f172a,stroke:#22d3ee
+    style H fill:#3a1a1a,stroke:#ef4444
+    style M fill:#3a1a1a,stroke:#ef4444
+    style O fill:#3a1a1a,stroke:#ef4444
+    style R fill:#3a1a1a,stroke:#ef4444
+    style Q fill:#1a3a1a,stroke:#22c55e
+    style G fill:#3a2a1e,stroke:#fbbf24
+    style J fill:#3a2a1e,stroke:#fbbf24
+    style N fill:#3a2a1e,stroke:#fbbf24
+    style P fill:#3a2a1e,stroke:#fbbf24
+                </div>
+            </div>
+            
+            <div class="mt-6 grid md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-semibold text-cyan-400 mb-3">Test Case Examples</h4>
+                    <div class="space-y-4">
+                        <div class="p-4 bg-[var(--bg-elevated)] rounded-lg border border-[var(--border)]">
+                            <div class="text-xs text-slate-500 mb-1">Test 1: Basic Integer</div>
+                            <div class="grid grid-cols-2 gap-2 text-sm">
+                                <div><span class="text-slate-500">Expected:</span> <span class="mono text-green-400">"10 20\n"</span></div>
+                                <div><span class="text-slate-500">Actual:</span> <span class="mono text-green-400">"10 20 "</span></div>
+                                <div class="col-span-2 text-green-400">✅ PASS — trailing newline/space ignored</div>
+                            </div>
+                        </div>
+                        <div class="p-4 bg-[var(--bg-elevated)] rounded-lg border border-[var(--border)]">
+                            <div class="text-xs text-slate-500 mb-1">Test 2: Float Precision</div>
+                            <div class="grid grid-cols-2 gap-2 text-sm">
+                                <div><span class="text-slate-500">Expected:</span> <span class="mono text-yellow-400">"3.14159"</span></div>
+                                <div><span class="text-slate-500">Actual:</span> <span class="mono text-yellow-400">"3.141592"</span></div>
+                                <div class="col-span-2 text-green-400">✅ PASS — rel diff = 6.3e-7 ≤ 1e-6</div>
+                            </div>
+                        </div>
+                        <div class="p-4 bg-[var(--bg-elevated)] rounded-lg border border-[var(--border)]">
+                            <div class="text-xs text-slate-500 mb-1">Test 3: Case Sensitive</div>
+                            <div class="grid grid-cols-2 gap-2 text-sm">
+                                <div><span class="text-slate-500">Expected:</span> <span class="mono text-red-400">"YES"</span></div>
+                                <div><span class="text-slate-500">Actual:</span> <span class="mono text-red-400">"yes"</span></div>
+                                <div class="col-span-2 text-red-400">❌ FAIL — case-sensitive string compare</div>
+                            </div>
+                        </div>
+                        <div class="p-4 bg-[var(--bg-elevated)] rounded-lg border border-[var(--border)]">
+                            <div class="text-xs text-slate-500 mb-1">Test 4: Token Count</div>
+                            <div class="grid grid-cols-2 gap-2 text-sm">
+                                <div><span class="text-slate-500">Expected:</span> <span class="mono text-red-400">"Hello World"</span></div>
+                                <div><span class="text-slate-500">Actual:</span> <span class="mono text-red-400">"Hello  World"</span></div>
+                                <div class="col-span-2 text-green-400">✅ PASS — multiple spaces → single token sep</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-cyan-400 mb-3">Implementation (matcher.go)</h4>
+                    <div class="code-block">
+<span class="token-keyword">func</span> <span class="token-function">Match</span>(actual, expected <span class="token-keyword">string</span>) <span class="token-keyword">bool</span> {
+    a := <span class="token-function">strings.Fields</span>(<span class="token-function">Normalize</span>(actual))
+    e := <span class="token-function">strings.Fields</span>(<span class="token-function">Normalize</span>(expected))
+    <span class="token-keyword">if</span> len(a) != len(e) {
+        <span class="token-keyword">return false</span>
+    }
+    <span class="token-keyword">for</span> i := range e {
+        <span class="token-keyword">if</span> !<span class="token-function">tokenEqual</span>(a[i], e[i]) {
+            <span class="token-keyword">return false</span>
+        }
+    }
+    <span class="token-keyword">return true</span>
+}
+
+<span class="token-keyword">func</span> <span class="token-function">tokenEqual</span>(a, e <span class="token-keyword">string</span>) <span class="token-keyword">bool</span> {
+    <span class="token-keyword">if</span> a == e { <span class="token-keyword">return true</span> }
+    af, aErr := <span class="token-function">strconv.ParseFloat</span>(a, 64)
+    ef, eErr := <span class="token-function">strconv.ParseFloat</span>(e, 64)
+    <span class="token-keyword">if</span> aErr != <span class="token-keyword">nil</span> || eErr != <span class="token-keyword">nil</span> {
+        <span class="token-keyword">return false</span>
+    }
+    <span class="token-keyword">return</span> <span class="token-function">math.Abs</span>(af-ef)/<span class="token-function">math.Max</span>(<span class="token-function">math.Abs</span>(af), <span class="token-function">math.Abs</span>(ef)) <= 1e-6
+}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Panel 5: Database Schema -->
+        <div class="tab-panel" id="panel-db" role="tabpanel">
+            <div class="flow-container">
+                <div class="mermaid">
+erDiagram
+    USER ||--o{ SUBMISSION : "makes"
+    USER ||--o{ COURSE_ENROLLMENT : "enrolls"
+    USER {
+        uint id PK
+        string name
+        string email UK
+        string nim UK
+        string password_hash
+        enum role "STUDENT/ADMIN"
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    COURSE ||--o{ QUIZ : "contains"
+    COURSE ||--o{ COURSE_ENROLLMENT : "has"
+    COURSE {
+        uint id PK
+        string title
+        text description
+        uint creator_id FK
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    QUIZ ||--o{ TEST_CASE : "has"
+    QUIZ ||--o{ SUBMISSION : "receives"
+    QUIZ {
+        uint id PK
+        uint course_id FK
+        string title
+        text statement
+        text constraints
+        int max_score
+        int time_limit
+        int memory_limit
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    TEST_CASE {
+        uint id PK
+        uint quiz_id FK
+        text stdin
+        text expected_output
+        int order_index
+        timestamp created_at
+    }
+    
+    SUBMISSION ||--o{ TEST_RESULT : "produces"
+    SUBMISSION {
+        uint id PK
+        uint user_id FK
+        uint quiz_id FK
+        text source_code
+        enum status "PASSED/WRONG_ANSWER/COMPILE_ERROR/RUNTIME_ERROR"
+        int score "0-100"
+        int passed_count
+        int total_count
+        int exec_time_ms
+        int memory_kb
+        timestamp created_at
+    }
+    
+    TEST_RESULT {
+        uint id PK
+        uint submission_id FK
+        uint test_case_id FK
+        text actual_output
+        boolean passed
+        int exec_time_ms
+        int memory_kb
+        text error_message
+    }
+    
+    COURSE_ENROLLMENT {
+        uint id PK
+        uint user_id FK
+        uint course_id FK
+        enum role "STUDENT/TEACHER"
+        timestamp enrolled_at
+    }
+</div>
+            </div>
+            
+            <div class="mt-6">
+                <h4 class="font-semibold text-cyan-400 mb-3">Key Relationships & Constraints</h4>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="code-block">
+<span class="token-comment">// Cascading Rules (GORM)</span>
+<span class="token-keyword">type</span> Quiz <span class="token-keyword">struct</span> {
+    TestCases []TestCase <span class="token-string">`gorm:"foreignKey:QuizID;constraint:OnDelete:CASCADE"`</span>
+    Submissions []Submission <span class="token-string">`gorm:"foreignKey:QuizID;constraint:OnDelete:CASCADE"`</span>
+}
+
+<span class="token-comment">// Indexes for Performance</span>
+<span class="token-keyword">type</span> Submission <span class="token-keyword">struct</span> {
+    <span class="token-comment">// Composite index for leaderboard queries</span>
+    UserID uint <span class="token-string">`gorm:"index:idx_user_quiz,priority:1"`</span>
+    QuizID uint <span class="token-string">`gorm:"index:idx_user_quiz,priority:2"`</span>
+}
+                    </div>
+                    <div class="code-block">
+<span class="token-comment">// Enum Definitions (models/)</span>
+<span class="token-keyword">type</span> Role <span class="token-keyword">string</span>
+<span class="token-keyword">const</span> (
+    RoleStudent Role = <span class="token-string">"STUDENT"</span>
+    RoleAdmin   Role = <span class="token-string">"ADMIN"</span>
+)
+
+<span class="token-keyword">type</span> SubmissionStatus <span class="token-keyword">string</span>
+<span class="token-keyword">const</span> (
+    StatusPassed       = <span class="token-string">"PASSED"</span>
+    StatusWrongAnswer  = <span class="token-string">"WRONG_ANSWER"</span>
+    StatusCompileError = <span class="token-string">"COMPILE_ERROR"</span>
+    StatusRuntimeError = <span class="token-string">"RUNTIME_ERROR"</span>
+    StatusPending      = <span class="token-string">"PENDING"</span>
+)
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Panel 6: API Endpoints -->
+        <div class="tab-panel" id="panel-api" role="tabpanel">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-[var(--border)] text-left text-slate-400">
+                            <th class="p-3 font-mono w-32">Method</th>
+                            <th class="p-3 font-mono">Endpoint</th>
+                            <th class="p-3">Description</th>
+                            <th class="p-3 w-28">Auth</th>
+                            <th class="p-3 w-24">Role</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-[var(--border)]">
+                        <tr class="hover:bg-[var(--bg-elevated)]">
+                            <td class="p-3 font-mono text-green-400">POST</td>
+                            <td class="p-3 font-mono">/api/v1/auth/register</td>
+                            <td class="p-3">Public registration (creates STUDENT)</td>
+                            <td class="p-3 text-slate-500">—</td>
+                            <td class="p-3 text-slate-500">—</td>
+                        </tr>
+                        <tr class="hover:bg-[var(--bg-elevated)]">
+                            <td class="p-3 font-mono text-green-400">POST</td>
+                            <td class="p-3 font-mono">/api/v1/auth/login</td>
+                            <td class="p-3">Returns access token + sets refresh cookie</td>
+                            <td class="p-3 text-slate-500">—</td>
+                            <td class="p-3 text-slate-500">—</td>
+                        </tr>
+                        <tr class="hover:bg-[var(--bg-elevated)]">
+                            <td class="p-3 font-mono text-green-400">POST</td>
+                            <td class="p-3 font-mono">/api/v1/auth/refresh</td>
+                            <td class="p-3">Rotate access token from refresh cookie</td>
+                            <td class="p-3 text-slate-500">Cookie</td>
+                            <td class="p-3 text-slate-500">Any</td>
+                        </tr>
+                        <tr class="hover:bg-[var(--bg-elevated)]">
+                            <td class="p-3 font-mono text-blue-400">GET</td>
+                            <td class="p-3 font-mono">/api/v1/courses</td>
+                            <td class="p-3">List published courses (paginated)</td>
+                            <td class="p-3 text-yellow-400">Bearer</td>
+                            <td class="p-3 text-slate-500">Any</td>
+                        </tr>
+                        <tr class="hover:bg-[var(--bg-elevated)]">
+                            <td class="p-3 font-mono text-blue-400">GET</td>
+                            <td class="p-3 font-mono">/api/v1/courses/:id</td>
+                            <td class="p-3">Course detail + quizzes</td>
+                            <td class="p-3 text-yellow-400">Bearer</td>
+                            <td class="p-3 text-slate-500">Enrolled</td>
+                        </tr>
+                        <tr class="hover:bg-[var(--bg-elevated)]">
+                            <td class="p-3 font-mono text-blue-400">POST</td>
+                            <td class="p-3 font-mono">/api/v1/courses/:id/enroll</td>
+                            <td class="p-3">Enroll in course</td>
+                            <td class="p-3 text-yellow-400">Bearer</td>
+                            <td class="p-3 text-slate-500">Student</td>
+                        </tr>
+                        <tr class="hover:bg-[var(--bg-elevated)]">
+                            <td class="p-3 font-mono text-blue-400">GET</td>
+                            <td class="p-3 font-mono">/api/v1/quizzes/:id</td>
+                            <td class="p-3">Quiz detail (statement, constraints)</td>
+                            <td class="p-3 text-yellow-400">Bearer</td>
+                            <td class="p-3 text-slate-500">Enrolled</td>
+                        </tr>
+                        <tr class="hover:bg-[var(--bg-elevated)] bg-[var(--bg-elevated)]">
+                            <td class="p-3 font-mono text-orange-400">POST</td>
+                            <td class="p-3 font-mono">/api/v1/submissions</td>
+                            <td class="p-3"><strong>Submit code for grading</strong></td>
+                            <td class="p-3 text-yellow-400">Bearer</td>
+                            <td class="p-3 text-slate-500">Student</td>
+                        </tr>
+                        <tr class="hover:bg-[var(--bg-elevated)]">
+                            <td class="p-3 font-mono text-blue-400">GET</td>
+                            <td class="p-3 font-mono">/api/v1/submissions/:id</td>
+                            <td class="p-3">Submission detail + test results</td>
+                            <td class="p-3 text-yellow-400">Bearer</td>
+                            <td class="p-3 text-slate-500">Owner/Admin</td>
+                        </tr>
+                        <tr class="hover:bg-[var(--bg-elevated)]">
+                            <td class="p-3 font-mono text-blue-400">GET</td>
+                            <td class="p-3 font-mono">/api/v1/users/me/submissions</td>
+                            <td class="p-3">My submission history</td>
+                            <td class="p-3 text-yellow-400">Bearer</td>
+                            <td class="p-3 text-slate-500">Student</td>
+                        </tr>
+                        <tr class="hover:bg-[var(--bg-elevated)]">
+                            <td class="p-3 font-mono text-purple-400">POST</td>
+                            <td class="p-3 font-mono">/api/v1/admin/quizzes</td>
+                            <td class="p-3">Create quiz (admin)</td>
+                            <td class="p-3 text-yellow-400">Bearer</td>
+                            <td class="p-3 text-purple-400">Admin</td>
+                        </tr>
+                        <tr class="hover:bg-[var(--bg-elevated)]">
+                            <td class="p-3 font-mono text-purple-400">POST</td>
+                            <td class="p-3 font-mono">/api/v1/admin/quizzes/generate-testcases</td>
+                            <td class="p-3"><strong>AI generate testcases</strong></td>
+                            <td class="p-3 text-yellow-400">Bearer</td>
+                            <td class="p-3 text-purple-400">Admin</td>
+                        </tr>
+                        <tr class="hover:bg-[var(--bg-elevated)]">
+                            <td class="p-3 font-mono text-purple-400">GET</td>
+                            <td class="p-3 font-mono">/api/v1/admin/courses/:id/analytics</td>
+                            <td class="p-3">Export course grades (Excel)</td>
+                            <td class="p-3 text-yellow-400">Bearer</td>
+                            <td class="p-3 text-purple-400">Admin</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="mt-6 code-block">
+<span class="token-comment">// Request/Response Examples</span>
+
+<span class="token-comment">// POST /api/v1/submissions</span>
+{
+  <span class="token-string">"quiz_id"</span>: 5,
+  <span class="token-string">"source_code"</span>: <span class="token-string">"#include <stdio.h>\nint main() { int a,b; scanf(\"%d %d\", &a, &b); printf(\"%d\", a+b); return 0; }"</span>
+}
+
+<span class="token-comment">// Response 201</span>
+{
+  <span class="token-string">"success"</span>: true,
+  <span class="token-string">"data"</span>: {
+    <span class="token-string">"id"</span>: 142,
+    <span class="token-string">"score"</span>: 80,
+    <span class="token-string">"status"</span>: <span class="token-string">"WRONG_ANSWER"</span>,
+    <span class="token-string">"passed_count"</span>: 4,
+    <span class="token-string">"total_count"</span>: 5,
+    <span class="token-string">"results"</span>: [
+      {<span class="token-string">"test_case_id"</span>: 1, <span class="token-string">"passed"</span>: true, <span class="token-string">"actual_output"</span>: <span class="token-string">"3"</span>},
+      {<span class="token-string">"test_case_id"</span>: 2, <span class="token-string">"passed"</span>: true, <span class="token-string">"actual_output"</span>: <span class="token-string">"7"</span>},
+      {<span class="token-string">"test_case_id"</span>: 3, <span class="token-string">"passed"</span>: false, <span class="token-string">"actual_output"</span>: <span class="token-string">"0"</span>, <span class="token-string">"expected"</span>: <span class="token-string">"-1"</span>}
+    ]
+  }
+}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'base',
+            themeVariables: {
+                primaryColor: '#06b6d4',
+                primaryTextColor: '#e5e7eb',
+                primaryBorderColor: '#22d3ee',
+                lineColor: '#06b6d4',
+                secondaryColor: '#1a2234',
+                tertiaryColor: '#111827',
+                background: 'transparent',
+                mainBkg: '#1a2234',
+                secondBkg: '#111827',
+                tertiaryBkg: '#0a0f1a',
+                textColor: '#e5e7eb',
+                nodeBorder: '#22d3ee',
+                clusterBkg: '#111827',
+                clusterBorder: '#2a3447',
+                fontFamily: 'Space Grotesk',
+                fontSize: '13px',
+                edgeLabelBackground: '#111827',
+                edgeLabelColor: '#22d3ee'
+            },
+            flowchart: {
+                curve: 'basis',
+                htmlLabels: true,
+                nodeSpacing: 40,
+                rankSpacing: 60
+            },
+            sequence: {
+                actorMargin: 60,
+                boxMargin: 10,
+                boxTextMargin: 5,
+                noteMargin: 10,
+                messageMargin: 35,
+                mirrorActors: true,
+                bottomMarginAdj: 1
+            },
+            er: {
+                diagramPadding: 20,
+                layoutDirection: 'TB',
+                entityPadding: 15,
+                minEntityWidth: 120,
+                minEntityHeight: 80
+            }
+        });
+        
+        // Tab switching
+        const tabs = document.querySelectorAll('.tab');
+        const panels = document.querySelectorAll('.tab-panel');
+        
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>
