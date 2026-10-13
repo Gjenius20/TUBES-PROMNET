@@ -1,10 +1,11 @@
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Link } from '@tanstack/react-router'
 import FormField from '../components/FormField'
 import { useCourseProgress } from '../hooks/useProgress'
-import { useCourses, useCreateCourse, useDeleteCourse } from '../hooks/useCourses'
+import { useCourses, useCreateCourse, useDeleteCourse, useAdminEnrollments, useUpdateEnrollmentStatus, useExportGrades } from '../hooks/useCourses'
 import { useCreateQuiz, useDeleteQuiz } from '../hooks/useQuizzes'
 import { getErrorMessage } from '../services/api'
 
@@ -108,6 +109,7 @@ function QuizForm({ courses }) {
 
 function CourseAdminItem({ course, deleteCourse, deleteQuiz }) {
   const { data, fetchProgress, exportExcel } = useCourseProgress(course.id)
+  const exportGrades = useExportGrades(course.id)
 
   return (
     <div key={course.id} className="panel p-4">
@@ -118,7 +120,14 @@ function CourseAdminItem({ course, deleteCourse, deleteQuiz }) {
         </div>
         <div className="flex gap-2">
           <button onClick={fetchProgress} className="btn-secondary text-xs">Progress</button>
-          <button onClick={exportExcel} className="btn-primary text-xs">Excel</button>
+          <button onClick={exportExcel} className="btn-primary text-xs">Excel Progress</button>
+          <button
+            onClick={() => exportGrades.mutate()}
+            disabled={exportGrades.isPending}
+            className="btn-success text-xs"
+          >
+            {exportGrades.isPending ? 'Mengunduh...' : 'Unduh Nilai (Excel)'}
+          </button>
           <button
             type="button"
             className="btn-danger"
@@ -191,6 +200,10 @@ export default function AdminPage() {
   const { data: courses, isLoading, isError, error } = useCourses()
   const deleteCourse = useDeleteCourse()
   const deleteQuiz = useDeleteQuiz()
+  const { data: enrollments, isLoading: enrollLoading } = useAdminEnrollments('PENDING')
+  const updateEnrollment = useUpdateEnrollmentStatus()
+  const [activeTab, setActiveTab] = useState('courses')
+  const [enrollmentStatus, setEnrollmentStatus] = useState('PENDING')
 
   if (isLoading) return <p className="text-ink-soft">Memuat…</p>
   if (isError) return <p role="alert" className="text-fail">{getErrorMessage(error)}</p>
@@ -199,29 +212,134 @@ export default function AdminPage() {
     <div className="space-y-8">
       <h1 className="text-3xl font-bold">Dashboard Admin</h1>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <CourseForm />
-        <QuizForm courses={courses} />
+      {/* Tab Navigation */}
+      <div className="border-b border-rule">
+        <nav className="flex space-x-8" aria-label="Tabs">
+          <button
+            onClick={() => setActiveTab('courses')}
+            className={`py-3 px-1 border-b-2 font-medium text-sm ${activeTab === 'courses' ? 'border-signal text-signal' : 'border-transparent text-ink-soft hover:text-ink'}`}
+          >
+            Kelola Kursus & Soal
+          </button>
+          <button
+            onClick={() => setActiveTab('enrollments')}
+            className={`py-3 px-1 border-b-2 font-medium text-sm ${activeTab === 'enrollments' ? 'border-signal text-signal' : 'border-transparent text-ink-soft hover:text-ink'}`}
+          >
+            Kelola Pendaftaran
+          </button>
+        </nav>
       </div>
 
-      <section>
-        <h2 className="mb-3 text-xl font-bold">Kursus & soal</h2>
-        {deleteCourse.isError || deleteQuiz.isError ? (
-          <p role="alert" className="mb-2 text-sm text-fail">
-            {getErrorMessage(deleteCourse.error || deleteQuiz.error)}
-          </p>
-        ) : null}
-        <div className="space-y-4">
-          {courses.map((course) => (
-            <CourseAdminItem 
-                key={course.id} 
-                course={course} 
-                deleteCourse={deleteCourse} 
-                deleteQuiz={deleteQuiz} 
-            />
-          ))}
-        </div>
-      </section>
+      {activeTab === 'courses' && (
+        <>
+          <div className="grid gap-6 lg:grid-cols-2">
+            <CourseForm />
+            <QuizForm courses={courses} />
+          </div>
+
+          <section>
+            <h2 className="mb-3 text-xl font-bold">Kursus & soal</h2>
+            {deleteCourse.isError || deleteQuiz.isError ? (
+              <p role="alert" className="mb-2 text-sm text-fail">
+                {getErrorMessage(deleteCourse.error || deleteQuiz.error)}
+              </p>
+            ) : null}
+            <div className="space-y-4">
+              {courses.map((course) => (
+                <CourseAdminItem
+                  key={course.id}
+                  course={course}
+                  deleteCourse={deleteCourse}
+                  deleteQuiz={deleteQuiz}
+                />
+              ))}
+            </div>
+          </section>
+        </>
+      )}
+
+      {activeTab === 'enrollments' && (
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold">Kelola Pendaftaran Kursus</h2>
+            <select
+              value={enrollmentStatus}
+              onChange={(e) => setEnrollmentStatus(e.target.value)}
+              className="input w-auto"
+            >
+              <option value="PENDING">Menunggu (Pending)</option>
+              <option value="APPROVED">Disetujui (Approved)</option>
+              <option value="REJECTED">Ditolak (Rejected)</option>
+            </select>
+          </div>
+
+          {enrollLoading ? (
+            <p className="text-ink-soft">Memuat…</p>
+          ) : (
+            <div className="panel overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-rule">
+                    <th className="text-left p-3">Siswa</th>
+                    <th className="text-left p-3">NIM</th>
+                    <th className="text-left p-3">Email</th>
+                    <th className="text-left p-3">Kursus</th>
+                    <th className="text-left p-3">Status</th>
+                    <th className="text-left p-3">Tanggal Daftar</th>
+                    <th className="text-right p-3">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {enrollments.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="text-center p-8 text-ink-soft">Tidak ada pengajuan pendaftaran</td>
+                    </tr>
+                  ) : (
+                    enrollments.map((enrollment) => (
+                      <tr key={enrollment.id} className="border-b border-rule">
+                        <td className="p-3">{enrollment.user?.name}</td>
+                        <td className="p-3">{enrollment.user?.nim}</td>
+                        <td className="p-3">{enrollment.user?.email}</td>
+                        <td className="p-3">{enrollment.course?.title}</td>
+                        <td className="p-3">
+                          <span className={`badge ${
+                            enrollment.status === 'APPROVED' ? 'badge-success' :
+                            enrollment.status === 'PENDING' ? 'badge-warning' :
+                            'badge-error'
+                          }`}>
+                            {enrollment.status}
+                          </span>
+                        </td>
+                        <td className="p-3">{new Date(enrollment.created_at).toLocaleDateString('id-ID')}</td>
+                        <td className="p-3 text-right">
+                          {enrollment.status === 'PENDING' && (
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => updateEnrollment.mutate({ id: enrollment.id, status: 'APPROVED' })}
+                                disabled={updateEnrollment.isPending}
+                                className="btn-success btn-sm"
+                              >
+                                Setujui
+                              </button>
+                              <button
+                                onClick={() => updateEnrollment.mutate({ id: enrollment.id, status: 'REJECTED' })}
+                                disabled={updateEnrollment.isPending}
+                                className="btn-error btn-sm"
+                              >
+                                Tolak
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      )}
     </div>
   )
 }

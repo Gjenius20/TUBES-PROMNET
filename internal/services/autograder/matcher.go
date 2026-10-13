@@ -24,13 +24,14 @@ func Normalize(s string) string {
 // Match membandingkan output program dengan output yang diharapkan.
 //
 // Aturan (tolerance matcher):
-//  1. Perbedaan whitespace/newline diabaikan; output dipecah menjadi token.
-//  2. Urutan token harus sama persis (sequence matching) dan jumlahnya harus sama.
-//  3. Token numerik dianggap sama bila selisihnya dalam toleransi relatif 1e-6.
-//  4. Token non-numerik (keyword/teks) dibandingkan persis, case-sensitive.
+//  1. Normalisasi terlebih dahulu: CRLF->LF, hapus trailing whitespace per baris, hapus trailing newline.
+//  2. Perbedaan whitespace/newline diabaikan; output dipecah menjadi token.
+//  3. Urutan token harus sama persis (sequence matching) dan jumlahnya harus sama.
+//  4. Token numerik dianggap sama bila selisihnya dalam toleransi relatif 1e-6.
+//  5. Token non-numerik (keyword/teks) dibandingkan persis, case-sensitive.
 func Match(actual, expected string) bool {
-	a := strings.Fields(actual)
-	e := strings.Fields(expected)
+	a := strings.Fields(Normalize(actual))
+	e := strings.Fields(Normalize(expected))
 	if len(a) != len(e) {
 		return false
 	}

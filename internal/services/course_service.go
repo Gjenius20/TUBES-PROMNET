@@ -185,3 +185,95 @@ func (s *CourseService) GetStudentProgress(ctx context.Context, courseID uint) (
 
 	return progresses, nil
 }
+
+func (s *CourseService) ExportCourseGradesToExcel(ctx context.Context, courseID uint, writer io.Writer) error {
+	course, err := s.courses.FindByID(ctx, courseID)
+	if err != nil {
+		return err
+	}
+
+	students, err := s.users.ListStudents(ctx)
+	if err != nil {
+		return err
+	}
+
+	f := excelize.NewFile()
+	defer f.Close()
+
+	sheet := "Grades"
+	f.NewSheet(sheet)
+
+	// Headers
+	headers := []string{"NIM", "Nama", "Email"}
+	for _, quiz := range course.Quizzes {
+		headers = append(headers, quiz.Title)
+	}
+	headers = append(headers, "Total Skor", "Max Skor", "Persentase")
+
+	for i, h := range headers {
+		cell, _ := excelize.CoordinatesToCellName(i+1, 1)
+		f.SetCellValue(sheet, cell, h)
+	}
+
+	// Data
+	for i, stu := range students {
+		row := i + 2
+		f.SetCellValue(sheet, fmt.Sprintf("A%d", row), stu.NIM)
+		f.SetCellValue(sheet, fmt.Sprintf("B%d", row), stu.Name)
+		f.SetCellValue(sheet, fmt.Sprintf("C%d", row), stu.Email)
+
+		totalScore := 0.0
+		totalMaxScore := 0
+
+		for j, quiz := range course.Quizzes {
+			col := j + 4 // Start from column D (index 4)
+			cell, _ := excelize.CoordinatesToCellName(col, row)
+
+			submissions, err := s.submissions.ListByCourse(ctx, stu.ID, courseID)
+			if err != nil {
+				return err
+			}
+
+			// Find best score for this quiz
+			var bestScore int
+			for _, sub := range submissions {
+				if sub.QuizID == quiz.ID && sub.Status == models.StatusPassed {
+					if sub.Score > bestScore {
+						bestScore = sub.Score
+					}
+				}
+			}
+
+			scorePct := 0.0
+			if quiz.MaxScore > 0 {
+				scorePct = float64(bestScore) / float64(quiz.MaxScore) * 100
+			}
+
+			f.SetCellValue(sheet, cell, scorePct)
+			totalScore += float64(bestScore)
+			totalMaxScore += quiz.MaxScore
+		}
+
+		// Total skor
+		totalCell, _ := excelize.CoordinatesToCellName(len(course.Quizzes)+4, row)
+		f.SetCellValue(sheet, totalCell, totalScore)
+
+		// Max skor
+		maxCell, _ := excelize.CoordinatesToCellName(len(course.Quizzes)+5, row)
+		f.SetCellValue(sheet, maxCell, totalMaxScore)
+
+		// Persentase
+		pctCell, _ := excelize.CoordinatesToCellName(len(course.Quizzes)+6, row)
+		pct := 0.0
+		if totalMaxScore > 0 {
+			pct = totalScore / float64(totalMaxScore) * 100
+		}
+		f.SetCellValue(sheet, pctCell, pct)
+	}
+
+	// Remove default sheet
+	f.DeleteSheet("Sheet1")
+	f.SetActiveSheet(0)
+
+	return f.Write(writer)
+}

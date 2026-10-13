@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS quizzes (
   title       VARCHAR(150)    NOT NULL,
   description TEXT            NOT NULL,
   `constraints` TEXT          NULL,
+  max_score   INT             NOT NULL DEFAULT 100,
   created_at  DATETIME(3)     NULL,
   updated_at  DATETIME(3)     NULL,
   PRIMARY KEY (id),
@@ -69,6 +70,22 @@ CREATE TABLE IF NOT EXISTS submissions (
   CONSTRAINT fk_submissions_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
   CONSTRAINT fk_submissions_quiz FOREIGN KEY (quiz_id) REFERENCES quizzes (id) ON DELETE CASCADE,
   CONSTRAINT chk_submissions_status CHECK (status IN ('PASSED', 'WRONG_ANSWER', 'COMPILE_ERROR', 'RUNTIME_ERROR'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS enrollments (
+  id         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  user_id    BIGINT UNSIGNED NOT NULL,
+  course_id  BIGINT UNSIGNED NOT NULL,
+  status     VARCHAR(20)     NOT NULL DEFAULT 'PENDING',
+  created_at DATETIME(3)     NULL,
+  updated_at DATETIME(3)     NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_enrollments_user_course (user_id, course_id),
+  KEY idx_enrollments_course_id (course_id),
+  KEY idx_enrollments_status (status),
+  CONSTRAINT fk_enrollments_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+  CONSTRAINT fk_enrollments_course FOREIGN KEY (course_id) REFERENCES courses (id) ON DELETE CASCADE,
+  CONSTRAINT chk_enrollments_status CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Fix user permissions for external / docker network access

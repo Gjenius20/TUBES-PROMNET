@@ -93,16 +93,16 @@ func (h *CourseController) GetProgress(c *gin.Context) {
 	utils.Success(c, http.StatusOK, "progress retrieved", gin.H{"progress": progress})
 }
 
-func (h *CourseController) ExportExcel(c *gin.Context) {
+func (h *CourseController) ExportGradesExcel(c *gin.Context) {
 	id, ok := parseID(c, "id")
 	if !ok {
 		return
 	}
 
 	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"course-report-%d.xlsx\"", id))
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"course-grades-%d.xlsx\"", id))
 
-	if err := h.courses.ExportCourseProgressToExcel(c.Request.Context(), id, c.Writer); err != nil {
+	if err := h.courses.ExportCourseGradesToExcel(c.Request.Context(), id, c.Writer); err != nil {
 		handleError(c, err)
 	}
 }

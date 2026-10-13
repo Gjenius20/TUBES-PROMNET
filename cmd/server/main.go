@@ -38,6 +38,7 @@ func main() {
 	quizRepo := repositories.NewQuizRepository(db)
 	testCaseRepo := repositories.NewTestCaseRepository(db)
 	submissionRepo := repositories.NewSubmissionRepository(db)
+	enrollmentRepo := repositories.NewEnrollmentRepository(db)
 
 	// Services & integrasi eksternal
 	generator := ai.NewGeminiGenerator(cfg.GeminiAPIKey, cfg.GeminiModel)
@@ -47,12 +48,14 @@ func main() {
 	courseService := services.NewCourseService(courseRepo, userRepo, submissionRepo)
 	quizService := services.NewQuizService(quizRepo, testCaseRepo, courseRepo, generator)
 	submissionService := services.NewSubmissionService(submissionRepo, quizRepo, testCaseRepo, runner)
+	enrollmentService := services.NewEnrollmentService(enrollmentRepo, courseRepo)
 
 	router := newRouter(cfg, handlers{
 		auth:         controllers.NewAuthController(authService, tokenManager, cfg.CookieSecure),
 		course:       controllers.NewCourseController(courseService),
 		quiz:         controllers.NewQuizController(quizService),
 		submission:   controllers.NewSubmissionController(submissionService),
+		enrollment:   controllers.NewEnrollmentController(enrollmentService),
 		tokenManager: tokenManager,
 	})
 
