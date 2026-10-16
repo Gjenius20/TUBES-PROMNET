@@ -9,10 +9,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type QuizController struct{ quizzes *services.QuizService }
+type QuizController struct{ Quizzes *services.QuizService }
 
 func NewQuizController(quizzes *services.QuizService) *QuizController {
-	return &QuizController{quizzes: quizzes}
+	return &QuizController{Quizzes: quizzes}
 }
 
 // Get (siswa): hanya menampilkan testcase non-hidden sebagai contoh.
@@ -21,7 +21,7 @@ func (h *QuizController) Get(c *gin.Context) {
 	if !ok {
 		return
 	}
-	quiz, err := h.quizzes.Get(c.Request.Context(), id)
+	quiz, err := h.Quizzes.Get(c.Request.Context(), id)
 	if err != nil {
 		handleError(c, err)
 		return
@@ -48,7 +48,7 @@ func (h *QuizController) AdminGet(c *gin.Context) {
 	if !ok {
 		return
 	}
-	quiz, err := h.quizzes.Get(c.Request.Context(), id)
+	quiz, err := h.Quizzes.Get(c.Request.Context(), id)
 	if err != nil {
 		handleError(c, err)
 		return
@@ -61,7 +61,7 @@ func (h *QuizController) Create(c *gin.Context) {
 	if !bindJSON(c, &req) {
 		return
 	}
-	quiz, err := h.quizzes.Create(c.Request.Context(), req.CourseID, req.Title, req.Description, req.Constraints)
+	quiz, err := h.Quizzes.Create(c.Request.Context(), req.CourseID, req.Title, req.Description, req.Constraints)
 	if err != nil {
 		handleError(c, err)
 		return
@@ -78,7 +78,7 @@ func (h *QuizController) Update(c *gin.Context) {
 	if !bindJSON(c, &req) {
 		return
 	}
-	quiz, err := h.quizzes.Update(c.Request.Context(), id, req.Title, req.Description, req.Constraints)
+	quiz, err := h.Quizzes.Update(c.Request.Context(), id, req.Title, req.Description, req.Constraints)
 	if err != nil {
 		handleError(c, err)
 		return
@@ -91,7 +91,7 @@ func (h *QuizController) Delete(c *gin.Context) {
 	if !ok {
 		return
 	}
-	if err := h.quizzes.Delete(c.Request.Context(), id); err != nil {
+	if err := h.Quizzes.Delete(c.Request.Context(), id); err != nil {
 		handleError(c, err)
 		return
 	}
@@ -107,7 +107,7 @@ func (h *QuizController) AddTestCase(c *gin.Context) {
 	if !bindJSON(c, &req) {
 		return
 	}
-	tc, err := h.quizzes.AddTestCase(c.Request.Context(), id, req.Stdin, req.ExpectedOutput, req.IsHidden)
+	tc, err := h.Quizzes.AddTestCase(c.Request.Context(), id, req.Stdin, req.ExpectedOutput, req.IsHidden)
 	if err != nil {
 		handleError(c, err)
 		return
@@ -120,7 +120,7 @@ func (h *QuizController) DeleteTestCase(c *gin.Context) {
 	if !ok {
 		return
 	}
-	if err := h.quizzes.DeleteTestCase(c.Request.Context(), id); err != nil {
+	if err := h.Quizzes.DeleteTestCase(c.Request.Context(), id); err != nil {
 		handleError(c, err)
 		return
 	}
@@ -132,7 +132,7 @@ func (h *QuizController) GenerateTestCases(c *gin.Context) {
 	if !bindJSON(c, &req) {
 		return
 	}
-	cases, err := h.quizzes.GenerateTestCases(c.Request.Context(), req.QuizID, req.ProblemStatement, req.Count)
+	cases, err := h.Quizzes.GenerateTestCases(c.Request.Context(), req.QuizID, req.ProblemStatement, req.Count)
 	if err != nil {
 		handleError(c, err)
 		return

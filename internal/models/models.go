@@ -84,7 +84,7 @@ type Submission struct {
 	PassedCount  int              `gorm:"not null;default:0" json:"passed_count"`
 	TotalCount   int              `gorm:"not null;default:0" json:"total_count"`
 	ErrorMessage string           `gorm:"type:text" json:"error_message"`
-	ResultsJson  string           `gorm:"type:text" json:"-"`
+	ResultsJson  string           `gorm:"type:json" json:"-"`
 	CreatedAt    time.Time        `json:"created_at"`
 
 	// Results di-load dari ResultsJson atau diisi langsung saat submit.
@@ -97,6 +97,7 @@ type Enrollment struct {
 	UserID    uint             `gorm:"not null;index:idx_enrollments_user_course,unique,priority:1" json:"user_id"`
 	CourseID  uint             `gorm:"not null;index:idx_enrollments_user_course,unique,priority:2" json:"course_id"`
 	Status    EnrollmentStatus `gorm:"size:20;not null;default:PENDING" json:"status"`
+	EnrolledBy *uint           `gorm:"null" json:"enrolled_by"`
 	CreatedAt time.Time        `json:"created_at"`
 	UpdatedAt time.Time        `json:"updated_at"`
 

@@ -43,14 +43,30 @@ func newRouter(cfg *config.Config, h handlers) *gin.Engine {
 
 		protected.GET("/courses", h.course.List)
 		protected.GET("/courses/me", h.course.ListMyCourses)
-		protected.GET("/courses/:id", h.course.Get)
-		protected.GET("/quizzes/:id", h.quiz.Get)
 
-		protected.GET("/student/enrollments", h.enrollment.MyEnrollments)
+		// Student routes dengan :id = course_id
+		studentCourse := protected.Group("")
+		studentCourse.Use(middleware.RequireEnrollment(h.enrollment.EnrollmentService))
+		{
+			studentCourse.GET("/courses/:id", h.course.Get)
+		}
 
-		protected.POST("/submissions", middleware.RateLimit(10, time.Minute, middleware.ByUser), h.submission.Create)
+		// Student routes dengan :id = quiz_id (course diambil dari quiz)
+		studentQuiz := protected.Group("")
+		studentQuiz.Use(middleware.RequireQuizEnrollment(h.enrollment.EnrollmentService, h.quiz.Quizzes))
+		{
+			studentQuiz.GET("/quizzes/:id", h.quiz.Get)
+		}
+
+		// Hanya POST /submissions yang memerlukan enrollment lewat body quiz_id.
+		// GET /submissions & GET /submissions/:id sudah dibatasi ke data milik user sendiri.
+		protected.POST("/submissions", middleware.RateLimit(10, time.Minute, middleware.ByUser),
+			middleware.RequireEnrollmentForSubmission(h.enrollment.EnrollmentService, h.quiz.Quizzes),
+			h.submission.Create)
 		protected.GET("/submissions", h.submission.List)
 		protected.GET("/submissions/:id", h.submission.Get)
+
+		protected.GET("/student/enrollments", h.enrollment.MyEnrollments)
 	}
 
 	admin := protected.Group("/admin")

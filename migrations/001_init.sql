@@ -73,18 +73,19 @@ CREATE TABLE IF NOT EXISTS submissions (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS enrollments (
-  id         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  user_id    BIGINT UNSIGNED NOT NULL,
-  course_id  BIGINT UNSIGNED NOT NULL,
-  status     VARCHAR(20)     NOT NULL DEFAULT 'PENDING',
-  created_at DATETIME(3)     NULL,
-  updated_at DATETIME(3)     NULL,
+  id          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  user_id     BIGINT UNSIGNED NOT NULL,
+  course_id   BIGINT UNSIGNED NOT NULL,
+  status      VARCHAR(20)     NOT NULL DEFAULT 'PENDING',
+  enrolled_by BIGINT UNSIGNED NULL,
+  created_at  DATETIME(3)     NULL,
+  updated_at  DATETIME(3)     NULL,
   PRIMARY KEY (id),
   UNIQUE KEY uq_enrollments_user_course (user_id, course_id),
-  KEY idx_enrollments_course_id (course_id),
-  KEY idx_enrollments_status (status),
+  KEY idx_enrollments_user (user_id),
   CONSTRAINT fk_enrollments_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
   CONSTRAINT fk_enrollments_course FOREIGN KEY (course_id) REFERENCES courses (id) ON DELETE CASCADE,
+  CONSTRAINT fk_enrollments_admin FOREIGN KEY (enrolled_by) REFERENCES users (id) ON DELETE SET NULL,
   CONSTRAINT chk_enrollments_status CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

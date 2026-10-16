@@ -16,7 +16,7 @@ type EnrollmentRepository interface {
 	ListByUser(ctx context.Context, userID uint) ([]models.Enrollment, error)
 	ListByCourse(ctx context.Context, courseID uint) ([]models.Enrollment, error)
 	// Admin bulk operations
-	BulkUpsertApproved(ctx context.Context, courseID uint, studentIDs []uint) error
+	BulkUpsertApproved(ctx context.Context, courseID uint, studentIDs []uint, enrolledBy uint) error
 	DeleteByUserAndCourse(ctx context.Context, userID, courseID uint) error
 }
 
@@ -58,36 +58,23 @@ func (r *enrollmentRepository) ListByCourse(ctx context.Context, courseID uint) 
 	return enrollments, translate(err)
 }
 
-func (r *enrollmentRepository) ListAll(ctx context.Context, status string) ([]models.Enrollment, error) {
-	var enrollments []models.Enrollment
-	q := r.db.WithContext(ctx).Preload("User").Preload("Course").Order("created_at DESC")
-	if status != "" {
-		q = q.Where("status = ?", status)
-	}
-	err := q.Find(&enrollments).Error
-	return enrollments, translate(err)
-}
-
-func (r *enrollmentRepository) Update(ctx context.Context, id uint, fields map[string]interface{}) error {
-	return translate(r.db.WithContext(ctx).Model(&models.Enrollment{}).Where("id = ?", id).Updates(fields).Error)
-}
-
-func (r *enrollmentRepository) BulkUpsertApproved(ctx context.Context, courseID uint, studentIDs []uint) error {
+func (r *enrollmentRepository) BulkUpsertApproved(ctx context.Context, courseID uint, studentIDs []uint, enrolledBy uint) error {
 	if len(studentIDs) == 0 {
 		return nil
 	}
 	enrollments := make([]models.Enrollment, len(studentIDs))
 	for i, sid := range studentIDs {
 		enrollments[i] = models.Enrollment{
-			UserID:   sid,
-			CourseID: courseID,
-			Status:   models.EnrollmentApproved,
+			UserID:     sid,
+			CourseID:   courseID,
+			Status:     models.EnrollmentApproved,
+			EnrolledBy: &enrolledBy,
 		}
 	}
 	// Use OnConflict to upsert (update status to APPROVED if exists)
 	return translate(r.db.WithContext(ctx).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "user_id"}, {Name: "course_id"}},
-		DoUpdates: clause.AssignmentColumns([]string{"status"}),
+		DoUpdates: clause.AssignmentColumns([]string{"status", "enrolled_by"}),
 	}).Create(&enrollments).Error)
 }
 

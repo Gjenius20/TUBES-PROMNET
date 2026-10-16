@@ -22,7 +22,17 @@ func NewCourseController(courses *services.CourseService, enrollments *services.
 }
 
 func (h *CourseController) List(c *gin.Context) {
-	courses, err := h.courses.List(c.Request.Context())
+	userID := middleware.CurrentUserID(c)
+	var (
+		courses []models.Course
+		err     error
+	)
+	if middleware.CurrentRole(c) == models.RoleAdmin {
+		courses, err = h.courses.List(c.Request.Context())
+	} else {
+		// Siswa hanya boleh melihat kursus yang sudah di-enroll APPROVED.
+		courses, err = h.courses.ListByStudentID(c.Request.Context(), userID)
+	}
 	if err != nil {
 		handleError(c, err)
 		return

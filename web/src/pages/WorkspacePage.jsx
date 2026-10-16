@@ -55,7 +55,7 @@ function EmptySubmission() {
   )
 }
 
-function EditorPanel({ quiz, submitMutation }) {
+function EditorPanel({ submitMutation }) {
   const [code, setCode] = useState(STARTER_CODE)
 
   const handleSubmit = async (e) => {

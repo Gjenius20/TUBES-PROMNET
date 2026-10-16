@@ -34,8 +34,8 @@ func (s *EnrollmentService) ListEnrollmentsByCourse(ctx context.Context, courseI
 }
 
 // BulkEnrollStudents admin bulk enroll siswa ke kursus (Direct Assignment).
-func (s *EnrollmentService) BulkEnrollStudents(ctx context.Context, courseID uint, studentIDs []uint) error {
-	return s.enrollments.BulkUpsertApproved(ctx, courseID, studentIDs)
+func (s *EnrollmentService) BulkEnrollStudents(ctx context.Context, courseID uint, studentIDs []uint, enrolledBy uint) error {
+	return s.enrollments.BulkUpsertApproved(ctx, courseID, studentIDs, enrolledBy)
 }
 
 // RemoveStudent admin hapus siswa dari kursus.

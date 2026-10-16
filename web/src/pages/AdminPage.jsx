@@ -8,7 +8,6 @@ import StudentEnrollModal from '../components/StudentEnrollModal'
 import { useCourseProgress } from '../hooks/useProgress'
 import { useCourses, useCreateCourse, useDeleteCourse, useExportGrades } from '../hooks/useCourses'
 import { useCreateQuiz, useDeleteQuiz } from '../hooks/useQuizzes'
-import { useBulkEnroll, useRemoveStudent, useStudents } from '../hooks/useUsers'
 import { getErrorMessage } from '../services/api'
 
 const courseSchema = z.object({

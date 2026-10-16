@@ -154,18 +154,31 @@ func runSeed(db *gorm.DB) {
 	log.Printf("🧪 Testcases created: %d", len(testCases))
 
 	// --- 4. Enroll Students ke Courses ---
+	// Sesuai AGENTS.md: tidak semua siswa terdaftar di semua course
 	statusApproved := models.EnrollmentApproved
-	for _, s := range students {
-		for _, c := range courses {
-			enroll := models.Enrollment{
-				UserID:   s.ID,
-				CourseID: c.ID,
-				Status:   statusApproved,
-			}
-			db.Where(models.Enrollment{UserID: s.ID, CourseID: c.ID}).FirstOrCreate(&enroll)
-		}
+	// Siswa 1 & 2 enroll di Course 1 saja
+	// Siswa 3 & 4 enroll di Course 2 saja
+	// Siswa 5 tidak terdaftar di course manapun
+	enrollments := []struct {
+		StudentID uint
+		CourseID  uint
+	}{
+		{StudentID: students[0].ID, CourseID: courses[0].ID}, // Budi -> Course 1
+		{StudentID: students[1].ID, CourseID: courses[0].ID}, // Siti -> Course 1
+		{StudentID: students[2].ID, CourseID: courses[1].ID}, // Joko -> Course 2
+		{StudentID: students[3].ID, CourseID: courses[1].ID}, // Dewi -> Course 2
+		// Ahmad (students[4]) tidak terdaftar
 	}
-	log.Println("📝 Enrollment created for all students to all courses.")
+	for _, e := range enrollments {
+		enroll := models.Enrollment{
+			UserID:     e.StudentID,
+			CourseID:   e.CourseID,
+			Status:     statusApproved,
+			EnrolledBy: &admin.ID, // Admin yang mendaftarkan
+		}
+		db.Where(models.Enrollment{UserID: e.StudentID, CourseID: e.CourseID}).FirstOrCreate(&enroll)
+	}
+	log.Println("📝 Enrollment created for students per AGENTS.md scenario.")
 
 	// --- 5. Simulasi Submission Acak ---
 	statuses := []models.SubmissionStatus{models.StatusPassed, models.StatusWrongAnswer}

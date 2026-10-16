@@ -21,6 +21,7 @@ type SubmissionService struct {
 	submissions repositories.SubmissionRepository
 	quizzes     repositories.QuizRepository
 	testCases   repositories.TestCaseRepository
+	enrollments repositories.EnrollmentRepository
 	runner      docker.Runner
 }
 
@@ -28,18 +29,32 @@ func NewSubmissionService(
 	submissions repositories.SubmissionRepository,
 	quizzes repositories.QuizRepository,
 	testCases repositories.TestCaseRepository,
+	enrollments repositories.EnrollmentRepository,
 	runner docker.Runner,
 ) *SubmissionService {
-	return &SubmissionService{submissions: submissions, quizzes: quizzes, testCases: testCases, runner: runner}
+	return &SubmissionService{
+		submissions: submissions,
+		quizzes:     quizzes,
+		testCases:   testCases,
+		enrollments: enrollments,
+		runner:      runner,
+	}
 }
 
-// Submit menjalankan kode siswa terhadap seluruh testcase lewat Docker (tidak pernah di host),
+// Submit menjalankan kode siswa terhadap seluruh testcase lewat Docker,
 // menilai hasilnya dengan tolerance matcher, lalu menyimpan submission.
-// Bila Docker gagal, tidak ada submission yang disimpan dan error dikembalikan.
 func (s *SubmissionService) Submit(ctx context.Context, userID, quizID uint, sourceCode string) (*models.Submission, error) {
-	if _, err := s.quizzes.FindByID(ctx, quizID); err != nil {
+	quiz, err := s.quizzes.FindByID(ctx, quizID)
+	if err != nil {
 		return nil, err
 	}
+
+	// Validasi Enrollment: Pastikan siswa terdaftar di course terkait quiz
+	enrolled, err := s.enrollments.FindByUserAndCourse(ctx, userID, quiz.CourseID)
+	if err != nil || enrolled == nil || enrolled.Status != models.EnrollmentApproved {
+		return nil, fmt.Errorf("akses ditolak: siswa belum terdaftar di kursus ini")
+	}
+
 	cases, err := s.testCases.ListByQuiz(ctx, quizID)
 	if err != nil {
 		return nil, err
@@ -117,10 +132,13 @@ func (s *SubmissionService) Submit(ctx context.Context, userID, quizID uint, sou
 }
 
 func (s *SubmissionService) save(ctx context.Context, sub *models.Submission, results []models.TestResult) (*models.Submission, error) {
-	if len(results) > 0 {
+	if results != nil && len(results) > 0 {
 		if b, err := json.Marshal(results); err == nil {
 			sub.ResultsJson = string(b)
 		}
+	} else {
+		// MySQL JSON column rejects empty string, store empty array instead
+		sub.ResultsJson = "[]"
 	}
 	if err := s.submissions.Create(ctx, sub); err != nil {
 		return nil, err

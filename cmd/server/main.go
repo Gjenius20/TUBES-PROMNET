@@ -42,12 +42,17 @@ func main() {
 
 	// Services & integrasi eksternal
 	generator := ai.NewGeminiGenerator(cfg.GeminiAPIKey, cfg.GeminiModel)
-	runner := docker.NewClient("gcc:12")
+	runner := docker.NewClient(docker.Config{
+		ImageName: cfg.ExecDockerImage,
+		Timeout:   time.Duration(cfg.ExecTimeoutSeconds) * time.Second,
+		MemoryMB:  cfg.ExecMemoryLimitMB,
+		CPULimit:  cfg.ExecCPULimit,
+	})
 
 	authService := services.NewAuthService(userRepo, tokenManager)
 	courseService := services.NewCourseService(courseRepo, userRepo, submissionRepo, enrollmentRepo)
 	quizService := services.NewQuizService(quizRepo, testCaseRepo, courseRepo, generator)
-	submissionService := services.NewSubmissionService(submissionRepo, quizRepo, testCaseRepo, runner)
+	submissionService := services.NewSubmissionService(submissionRepo, quizRepo, testCaseRepo, enrollmentRepo, runner)
 	enrollmentService := services.NewEnrollmentService(enrollmentRepo, courseRepo, userRepo)
 
 	router := newRouter(cfg, handlers{

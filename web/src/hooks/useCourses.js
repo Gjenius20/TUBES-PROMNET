@@ -39,33 +39,10 @@ export function useDeleteCourse() {
   })
 }
 
-export function useEnroll(courseId) {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: async () => (await api.post(`/courses/${courseId}/enroll`)).data.data.enrollment,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['studentEnrollments'] }),
-  })
-}
-
 export function useStudentEnrollments() {
   return useQuery({
     queryKey: ['studentEnrollments'],
     queryFn: async () => (await api.get('/student/enrollments')).data.data.enrollments,
-  })
-}
-
-export function useAdminEnrollments(status) {
-  return useQuery({
-    queryKey: ['adminEnrollments', status],
-    queryFn: async () => (await api.get('/admin/enrollments', { params: { status } })).data.data.enrollments,
-  })
-}
-
-export function useUpdateEnrollmentStatus() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: async ({ id, status }) => (await api.patch(`/admin/enrollments/${id}`, { status })).data.data.enrollment,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['adminEnrollments'] }),
   })
 }
 

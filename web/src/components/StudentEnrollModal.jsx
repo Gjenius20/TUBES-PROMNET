@@ -6,11 +6,10 @@ export default function StudentEnrollModal({ courseId, isOpen, onClose }) {
   const [page, setPage] = useState(1);
   const [selectedIds, setSelectedIds] = useState(new Set());
 
-  const modalRef = useRef(null);
   const searchInputRef = useRef(null);
   const previousActiveElement = useRef(null);
 
-  const { data, isLoading, isFetching, isError, error } = useStudents(search, page);
+  const { data, isLoading, isError, error } = useStudents(search, page);
   const bulkEnroll = useBulkEnroll(courseId);
 
   // Focus Management & Scroll Lock

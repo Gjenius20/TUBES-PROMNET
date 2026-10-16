@@ -9,7 +9,6 @@ import (
 )
 
 type UserRepository interface {
-	ListStudents(ctx context.Context) ([]models.User, error)
 	ListStudentsPaginated(ctx context.Context, search string, page, limit int) ([]models.User, int64, error)
 	Create(ctx context.Context, user *models.User) error
 	FindByEmail(ctx context.Context, email string) (*models.User, error)
@@ -24,12 +23,6 @@ func NewUserRepository(db *gorm.DB) UserRepository { return &userRepository{db: 
 
 func (r *userRepository) Create(ctx context.Context, user *models.User) error {
 	return translate(r.db.WithContext(ctx).Create(user).Error)
-}
-
-func (r *userRepository) ListStudents(ctx context.Context) ([]models.User, error) {
-	var users []models.User
-	err := r.db.WithContext(ctx).Where("role = ?", models.RoleStudent).Find(&users).Error
-	return users, translate(err)
 }
 
 func (r *userRepository) FindByEmail(ctx context.Context, email string) (*models.User, error) {

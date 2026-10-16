@@ -12,11 +12,11 @@ import (
 )
 
 type EnrollmentController struct {
-	enrollments *services.EnrollmentService
+	EnrollmentService *services.EnrollmentService
 }
 
-func NewEnrollmentController(enrollments *services.EnrollmentService) *EnrollmentController {
-	return &EnrollmentController{enrollments: enrollments}
+func NewEnrollmentController(s *services.EnrollmentService) *EnrollmentController {
+	return &EnrollmentController{EnrollmentService: s}
 }
 
 type BulkEnrollRequest struct {
@@ -27,7 +27,7 @@ type BulkEnrollRequest struct {
 func (h *EnrollmentController) MyEnrollments(c *gin.Context) {
 	userID := middleware.CurrentUserID(c)
 
-	enrollments, err := h.enrollments.GetMyEnrollments(c.Request.Context(), userID)
+	enrollments, err := h.EnrollmentService.GetMyEnrollments(c.Request.Context(), userID)
 	if err != nil {
 		handleError(c, err)
 		return
@@ -42,7 +42,7 @@ func (h *EnrollmentController) ListByCourse(c *gin.Context) {
 		return
 	}
 
-	enrollments, err := h.enrollments.ListEnrollmentsByCourse(c.Request.Context(), id)
+	enrollments, err := h.EnrollmentService.ListEnrollmentsByCourse(c.Request.Context(), id)
 	if err != nil {
 		handleError(c, err)
 		return
@@ -62,7 +62,7 @@ func (h *EnrollmentController) ListStudents(c *gin.Context) {
 		fmt.Sscanf(l, "%d", &limit)
 	}
 
-	users, total, err := h.enrollments.ListStudentsPaginated(c.Request.Context(), search, page, limit)
+	users, total, err := h.EnrollmentService.ListStudentsPaginated(c.Request.Context(), search, page, limit)
 	if err != nil {
 		handleError(c, err)
 		return
@@ -89,7 +89,9 @@ func (h *EnrollmentController) BulkEnroll(c *gin.Context) {
 		return
 	}
 
-	if err := h.enrollments.BulkEnrollStudents(c.Request.Context(), id, req.StudentIDs); err != nil {
+	enrolledBy := middleware.CurrentUserID(c)
+
+	if err := h.EnrollmentService.BulkEnrollStudents(c.Request.Context(), id, req.StudentIDs, enrolledBy); err != nil {
 		handleError(c, err)
 		return
 	}
@@ -107,7 +109,7 @@ func (h *EnrollmentController) RemoveStudent(c *gin.Context) {
 	var studentID uint
 	fmt.Sscanf(studentIDStr, "%d", &studentID)
 
-	if err := h.enrollments.RemoveStudent(c.Request.Context(), courseID, studentID); err != nil {
+	if err := h.EnrollmentService.RemoveStudent(c.Request.Context(), courseID, studentID); err != nil {
 		handleError(c, err)
 		return
 	}
