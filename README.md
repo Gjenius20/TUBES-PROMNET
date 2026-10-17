@@ -274,6 +274,25 @@ Frontend behavior (UX only):
 7. **Tolerance Matcher Engine** compares student `stdout` against `expected_output` using sequence & keyword matching logic.
 8. Evaluation score & status (`PASSED`, `WRONG_ANSWER`, `COMPILE_ERROR`) are recorded in MySQL.
 
+### 2.5. Run Test Case Flow (Student)
+
+1. Student clicks "Run Test Case" in the WorkspacePage after writing C code.
+2. Request hits `/api/v1/submissions/run` with `quiz_id` and `source_code`.
+3. Backend resolves the quiz's course and verifies the student is enrolled (same as submission).
+4. Backend fetches problem testcases from database.
+5. Backend executes `source_code` + `stdin` in Docker container (gcc:12) for each testcase.
+6. Docker returns execution `stdout`/`stderr` and exit code for each testcase.
+7. Backend uses the Tolerance Matcher Engine to compare student `stdout` against `expected_output` for each testcase (for visibility, not for scoring).
+8. Backend returns a list of testcase results, each containing:
+   - stdin (if not hidden)
+   - expected_output (if not hidden)
+   - actual output (stdout)
+   - stderr (if any)
+   - compile output (if compilation error)
+   - exit code
+   - status (PASSED, WRONG_ANSWER, COMPILE_ERROR, RUNTIME_ERROR, TIME_LIMIT_EXCEEDED)
+9. Frontend displays the results in a terminal-like format, showing input, expected output, actual output, and any errors.
+
 ### 3. Admin Dashboard & Reporting Flow
 
 1. Admin manages Courses, Quizzes, and Student Enrollments via Admin Dashboard (enrollment details: see [Enrollment System](#enrollment-system)).
