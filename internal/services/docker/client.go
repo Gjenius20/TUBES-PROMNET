@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os/exec"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -27,6 +28,7 @@ type Result struct {
 	Message           string
 	StatusID          int
 	StatusDescription string
+	ExitCode          int
 }
 
 // Runner mengabstraksi eksekusi kode sehingga mudah di-mock pada test.
@@ -96,37 +98,58 @@ func (c *Client) Run(ctx context.Context, sourceCode, stdin string) (*Result, er
 	cmd.Stderr = &stderr
 
 	err := cmd.Run()
+	result := &Result{}
 
-	res := &Result{
-		Stdout: stdout.String(),
-		Stderr: stderr.String(),
-	}
-	stderrStr := stderr.String()
-
-	switch {
-	case isCompilationError(stderrStr):
-		res.StatusID = StatusCompilationError
-		res.StatusDescription = "Compilation Error"
-		res.CompileOutput = stderrStr
-	case runCtx.Err() == context.DeadlineExceeded:
-		res.StatusID = StatusTimeLimit
-		res.StatusDescription = "Time Limit Exceeded"
-	case err != nil:
-		res.StatusID = StatusTimeLimit
-		res.StatusDescription = "Runtime Error"
-	default:
-		res.StatusID = StatusAccepted
-		res.StatusDescription = "Accepted"
+	// Get exit code from the process state or error
+	if err != nil {
+		if exitError, ok := err.(*exec.ExitError); ok {
+			if status, ok := exitError.Sys().(syscall.WaitStatus); ok {
+				result.ExitCode = status.ExitStatus()
+			}
+		}
+	} else {
+		// Success, exit code 0
+		result.ExitCode = 0
 	}
 
-	return res, nil
+	result.Stdout = stdout.String()
+	result.Stderr = stderr.String()
+
+	// Check for compile errors in stderr or stdout (gcc outputs to stderr)
+	if isCompilationError(result.Stderr) || isCompilationError(result.Stdout) {
+		result.StatusID = StatusCompilationError
+		result.StatusDescription = "Compilation Error"
+		result.CompileOutput = result.Stderr
+		if result.CompileOutput == "" {
+			result.CompileOutput = result.Stdout
+		}
+		return result, nil
+	}
+
+	// Check for timeout (context deadline exceeded)
+	if ctx.Err() == context.DeadlineExceeded {
+		result.StatusID = StatusTimeLimit
+		result.StatusDescription = "Time Limit Exceeded"
+		result.Message = "Time limit exceeded"
+		return result, nil
+	}
+
+	// Default to accepted if no errors and no timeout
+	result.StatusID = StatusAccepted
+	result.StatusDescription = "Accepted"
+	return result, nil
 }
 
-// isCompilationError mendeteksi error kompilasi gcc dari stderr.
+// isCompilationError returns true if the given stderr indicates a compilation error.
 func isCompilationError(stderr string) bool {
-	return strings.Contains(stderr, "error:") ||
-		strings.Contains(stderr, "Error:") ||
-		strings.Contains(stderr, "fatal error:") ||
-		strings.Contains(stderr, "undefined reference") ||
-		strings.Contains(stderr, "ld returned")
+	if strings.Contains(stderr, "error:") {
+		return true
+	}
+	if strings.Contains(stderr, "undefined reference") {
+		return true
+	}
+	if strings.Contains(stderr, "collect2:") {
+		return true
+	}
+	return false
 }

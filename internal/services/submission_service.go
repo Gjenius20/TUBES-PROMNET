@@ -84,10 +84,18 @@ func (s *SubmissionService) Submit(ctx context.Context, userID, quizID uint, sou
 			return s.save(ctx, sub, nil)
 		}
 
-		tr := models.TestResult{Index: i + 1, Hidden: tc.IsHidden}
+		tr := models.TestResult{
+			Index:      i + 1,
+			Hidden:     tc.IsHidden,
+			RawStdout:  res.Stdout,
+			RawStderr:  res.Stderr,
+			ExitCode:   res.ExitCode,
+			CompileOutput: res.CompileOutput,
+		}
 		if !tc.IsHidden {
 			tr.Stdin = tc.Stdin
 			tr.ExpectedOutput = tc.ExpectedOutput
+			tr.ActualOutput = truncate(autograder.Normalize(res.Stdout), maxOutputPreview)
 		}
 
 		switch {
@@ -98,14 +106,10 @@ func (s *SubmissionService) Submit(ctx context.Context, userID, quizID uint, sou
 				sub.PassedCount++
 			} else {
 				tr.Status = string(models.StatusWrongAnswer)
-				if !tc.IsHidden {
-					tr.ActualOutput = truncate(autograder.Normalize(res.Stdout), maxOutputPreview)
-				}
 			}
 		case isRuntimeFailure(res.StatusID):
 			runtimeFailure = true
 			tr.Status = string(models.StatusRuntimeError)
-			tr.Message = res.StatusDescription
 			if !tc.IsHidden {
 				tr.Message = truncate(firstNonEmpty(res.Stderr, res.Message, res.StatusDescription), maxOutputPreview)
 			}
@@ -158,8 +162,12 @@ func (s *SubmissionService) Run(ctx context.Context, userID, quizID uint, source
 		}
 
 		tr := models.TestResult{
-			Index:  i + 1,
-			Hidden: tc.IsHidden,
+			Index:      i + 1,
+			Hidden:     tc.IsHidden,
+			RawStdout:  res.Stdout,
+			RawStderr:  res.Stderr,
+			ExitCode:   res.ExitCode,
+			CompileOutput: res.CompileOutput,
 		}
 
 		if res.StatusID == docker.StatusCompilationError {

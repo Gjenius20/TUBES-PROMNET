@@ -115,6 +115,10 @@ type TestResult struct {
 	Status         string `json:"status"`
 	Stdin          string `json:"stdin,omitempty"`
 	ExpectedOutput string `json:"expected_output,omitempty"`
-	ActualOutput   string `json:"actual_output,omitempty"`
+	ActualOutput   string `json:"actual_output,omitempty"` // normalized stdout for comparison
+	RawStdout      string `json:"raw_stdout,omitempty"`    // original stdout
+	RawStderr      string `json:"raw_stderr,omitempty"`    // original stderr
+	CompileOutput  string `json:"compile_output,omitempty"`
+	ExitCode       int    `json:"exit_code,omitempty"`
 	Message        string `json:"message,omitempty"`
 }

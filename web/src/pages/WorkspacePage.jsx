@@ -52,7 +52,6 @@ function TestRunResultPanel({ results }) {
 
   const passedCount = results.filter(r => r.passed === true).length
   const totalCount = results.length
-  const visibleFailures = results.filter((r) => !r.hidden && r.passed !== true)
 
   return (
     <div className="panel space-y-3 p-4" aria-live="polite">
@@ -64,13 +63,67 @@ function TestRunResultPanel({ results }) {
 
       {results.length > 0 ? <VerdictStrip results={results} /> : null}
 
-      {visibleFailures.map((r) => (
-        <div key={r.index} className="rounded-md border border-rule p-3 text-xs">
-          <p className="mb-1 font-semibold">Testcase {r.index}: {r.status}</p>
-          {r.stdin ? <pre className="overflow-auto">Input:{'\n'}{r.stdin}</pre> : null}
-          <pre className="overflow-auto">Diharapkan:{'\n'}{r.expected_output}</pre>
-          {r.actual_output !== undefined ? <pre className="overflow-auto">Output Anda:{'\n'}{r.actual_output}</pre> : null}
-          {r.message && <pre className="overflow-auto mt-1 text-xs text-fail">Catatan:{'\n'}{r.message}</pre>}
+      {results.map((r) => (
+        <div key={r.index} className="mb-4 p-3 rounded border">
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="font-semibold text-lg">Testcase {r.index}</h3>
+            <span className={`px-2 py-0.5 rounded text-xs font-medium ${r.passed ? 'bg-pass/20 text-pass' : 'bg-fail/20 text-fail'}`}>
+              {r.status}
+            </span>
+          </div>
+
+          {!r.hidden && (
+            <>
+              {r.stdin && (
+                <div className="mb-2">
+                  <p className="text-sm font-medium text-ink/80">Input (stdin):</p>
+                  <pre className="overflow-auto whitespace-pre-wrap text-xs bg-ink/5 p-2 rounded">{r.stdin}</pre>
+                </div>
+              )}
+
+              <div className="mb-2">
+                <p className="text-sm font-medium text-ink/80">Expected Output:</p>
+                <pre className="overflow-auto whitespace-pre-wrap text-xs bg-ink/5 p-2 rounded">{r.expected_output}</pre>
+              </div>
+
+              <div className="mb-2">
+                <p className="text-sm font-medium text-ink/80">Actual Output (stdout):</p>
+                <pre className="overflow-auto whitespace-pre-wrap text-xs bg-ink/5 p-2 rounded">{r.raw_stdout ?? '(no output)'}</pre>
+              </div>
+
+              {r.raw_stderr && (
+                <div className="mb-2">
+                  <p className="text-sm font-medium text-ink/80">Error Output (stderr):</p>
+                  <pre className="overflow-auto whitespace-pre-wrap text-xs bg-ink/5 p-2 rounded text-fail">{r.raw_stderr}</pre>
+                </div>
+              )}
+
+              {r.compile_output && (
+                <div className="mb-2">
+                  <p className="text-sm font-medium text-ink/80">Compiler Output:</p>
+                  <pre className="overflow-auto whitespace-pre-wrap text-xs bg-ink/5 p-2 rounded text-fail">{r.compile_output}</pre>
+                </div>
+              )}
+
+              <div className="mb-2">
+                <p className="text-sm font-medium text-ink/80">Exit Code:</p>
+                <span className="font-mono text-xs bg-ink/5 p-1 rounded">{r.exit_code ?? 'N/A'}</span>
+              </div>
+
+              {r.message && (
+                <div className="mb-2">
+                  <p className="text-sm font-medium text-ink/80">Message:</p>
+                  <pre className="overflow-auto whitespace-pre-wrap text-xs bg-ink/5 p-2 rounded">{r.message}</pre>
+                </div>
+              )}
+            </>
+          )}
+
+          {r.hidden && (
+            <div className="text-sm text-ink/50 italic">
+              (Hidden testcase - input and expected output not shown for security)
+            </div>
+          )}
         </div>
       ))}
     </div>
