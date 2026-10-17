@@ -529,6 +529,7 @@ All paths below are relative to `/api/v1`. “Public” means no access token is
 | `GET`    | `/courses/:id`                               | Enrolled student or admin; non-enrolled student gets `403`, missing course gets `404`       |
 | `GET`    | `/quizzes/:id`                               | Enrolled student or admin; course resolved from quiz, not client input                      |
 | `POST`   | `/submissions`                               | Enrolled student; course resolved from `quiz_id` before executing any code                  |
+| `POST`   | `/submissions/run`                           | Enrolled student; course resolved from `quiz_id` before executing any code (does not create submission record) |
 | `GET`    | `/submissions`                               | Authenticated; own submissions only                                                         |
 | `GET`    | `/submissions/:id`                           | Authenticated; own submission, or admin                                                     |
 | `GET`    | `/student/enrollments`                       | Authenticated                                                                               |

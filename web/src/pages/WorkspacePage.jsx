@@ -3,7 +3,7 @@ import { useParams } from '@tanstack/react-router'
 import CodeEditor from '../components/CodeEditor'
 import StatusBadge from '../components/StatusBadge'
 import VerdictStrip from '../components/VerdictStrip'
-import { useQuiz, useSubmissions, useSubmit } from '../hooks/useQuizzes'
+import { useQuiz, useSubmissions, useSubmit, useRunTestCases } from '../hooks/useQuizzes'
 import { getErrorMessage } from '../services/api'
 
 const STARTER_CODE = `#include <stdio.h>
@@ -47,6 +47,36 @@ function ResultPanel({ submission }) {
   )
 }
 
+function TestRunResultPanel({ results }) {
+  if (!results || results.length === 0) return null
+
+  const passedCount = results.filter(r => r.passed === true).length
+  const totalCount = results.length
+  const visibleFailures = results.filter((r) => !r.hidden && r.passed !== true)
+
+  return (
+    <div className="panel space-y-3 p-4" aria-live="polite">
+      <div className="flex flex-wrap items-center gap-3 mb-2">
+        <span className="px-2 py-1 rounded text-xs font-medium">
+          {passedCount}/{totalCount} testcase lulus
+        </span>
+      </div>
+
+      {results.length > 0 ? <VerdictStrip results={results} /> : null}
+
+      {visibleFailures.map((r) => (
+        <div key={r.index} className="rounded-md border border-rule p-3 text-xs">
+          <p className="mb-1 font-semibold">Testcase {r.index}: {r.status}</p>
+          {r.stdin ? <pre className="overflow-auto">Input:{'\n'}{r.stdin}</pre> : null}
+          <pre className="overflow-auto">Diharapkan:{'\n'}{r.expected_output}</pre>
+          {r.actual_output !== undefined ? <pre className="overflow-auto">Output Anda:{'\n'}{r.actual_output}</pre> : null}
+          {r.message && <pre className="overflow-auto mt-1 text-xs text-fail">Catatan:{'\n'}{r.message}</pre>}
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function EmptySubmission() {
   return (
     <div className="panel p-6 text-center text-ink-soft">
@@ -55,41 +85,76 @@ function EmptySubmission() {
   )
 }
 
-function EditorPanel({ submitMutation }) {
+function EditorPanel({ submitMutation, runTestMutation }) {
   const [code, setCode] = useState(STARTER_CODE)
+  const [testRunResults, setTestRunResults] = useState(null)
+  const [testRunLoading, setTestRunLoading] = useState(false)
+  const [testRunError, setTestRunError] = useState(null)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     await submitMutation.mutateAsync({ sourceCode: code })
   }
 
+  const handleRunTest = async () => {
+    setTestRunLoading(true)
+    setTestRunError(null)
+    try {
+      const results = await runTestMutation.mutateAsync({ sourceCode: code })
+      setTestRunResults(results)
+    } catch (err) {
+      setTestRunError(err)
+    } finally {
+      setTestRunLoading(false)
+    }
+  }
+
   return (
     <div className="space-y-4">
-      <form onSubmit={handleSubmit} className="space-y-3">
-        <div>
-          <label htmlFor="editor" className="block text-sm font-medium mb-1">
-            Editor C
-          </label>
-          <CodeEditor value={code} onChange={setCode} />
-        </div>
+      <div>
+        <label htmlFor="editor" className="block text-sm font-medium mb-1">
+          Editor C
+        </label>
+        <CodeEditor value={code} onChange={setCode} />
+      </div>
 
+      <div className="flex gap-3">
         <button
-          type="submit"
-          className="btn-primary w-full"
-          disabled={submitMutation.isPending}
+          onClick={handleRunTest}
+          className="btn-secondary flex-1"
+          disabled={testRunLoading}
         >
-          {submitMutation.isPending ? 'Mengirim...' : 'Kirim & Jalankan'}
+          {testRunLoading ? 'Menjalankan...' : 'Jalankan Test Case'}
         </button>
-      </form>
+        <button
+          onClick={handleSubmit}
+          className="btn-primary flex-1"
+          disabled={submitMutation.isPending || testRunLoading}
+        >
+          {submitMutation.isPending ? 'Mengirim...' : 'Kirim & Nilai'}
+        </button>
+      </div>
+
+      {testRunLoading && (
+        <p className="text-center text-ink-soft pt-2">Sedang menjalankan test case...</p>
+      )}
+
+      {testRunError && (
+        <p role="alert" className="text-fail text-sm pt-2">
+          {getErrorMessage(testRunError)}
+        </p>
+      )}
+
+      {testRunResults && <TestRunResultPanel results={testRunResults} />}
 
       {submitMutation.isError && (
-        <p role="alert" className="text-fail text-sm">
+        <p role="alert" className="text-fail text-sm pt-2">
           {getErrorMessage(submitMutation.error)}
         </p>
       )}
 
       {submitMutation.isSuccess && (
-        <p role="status" className="text-success text-sm">
+        <p role="status" className="text-success text-sm pt-2">
           Submission berhasil dikirim!
         </p>
       )}
@@ -102,6 +167,7 @@ export default function WorkspacePage() {
   const { data: quiz, isLoading, isError, error } = useQuiz(quizId)
   const { data: submissions } = useSubmissions(quizId)
   const submitMutation = useSubmit(quizId)
+  const runTestMutation = useRunTestCases(quizId)
 
   if (isLoading) return <p className="p-8 text-ink-soft">Memuat soal...</p>
   if (isError) return <p role="alert" className="p-8 text-fail">{getErrorMessage(error)}</p>
@@ -139,7 +205,7 @@ export default function WorkspacePage() {
 
       {/* Editor & Hasil */}
       <div className="space-y-4">
-        <EditorPanel quiz={quiz} submitMutation={submitMutation} />
+        <EditorPanel submitMutation={submitMutation} runTestMutation={runTestMutation} />
 
         {/* Riwayat Submission */}
         <div className="panel p-4">

@@ -131,6 +131,74 @@ func (s *SubmissionService) Submit(ctx context.Context, userID, quizID uint, sou
 	return s.save(ctx, sub, results)
 }
 
+func (s *SubmissionService) Run(ctx context.Context, userID, quizID uint, sourceCode string) ([]models.TestResult, error) {
+	quiz, err := s.quizzes.FindByID(ctx, quizID)
+	if err != nil {
+		return nil, err
+	}
+
+	enrolled, err := s.enrollments.FindByUserAndCourse(ctx, userID, quiz.CourseID)
+	if err != nil || enrolled == nil || enrolled.Status != models.EnrollmentApproved {
+		return nil, fmt.Errorf("akses ditolak: siswa belum terdaftar di kursus ini")
+	}
+
+	cases, err := s.testCases.ListByQuiz(ctx, quizID)
+	if err != nil {
+		return nil, err
+	}
+	if len(cases) == 0 {
+		return nil, ErrNoTestCases
+	}
+
+	results := make([]models.TestResult, 0, len(cases))
+	for i, tc := range cases {
+		res, err := s.runner.Run(ctx, sourceCode, tc.Stdin)
+		if err != nil {
+			return nil, err
+		}
+
+		tr := models.TestResult{
+			Index:  i + 1,
+			Hidden: tc.IsHidden,
+		}
+
+		if res.StatusID == docker.StatusCompilationError {
+			tr.Status = string(models.StatusCompileError)
+			tr.Message = truncate(firstNonEmpty(res.CompileOutput, res.Message, res.StatusDescription), maxOutputPreview)
+			results = append(results, tr)
+			break
+		}
+
+		if !tc.IsHidden {
+			tr.Stdin = tc.Stdin
+			tr.ExpectedOutput = tc.ExpectedOutput
+			tr.ActualOutput = truncate(autograder.Normalize(res.Stdout), maxOutputPreview)
+		}
+
+		switch {
+		case res.StatusID == docker.StatusAccepted:
+			if autograder.Match(res.Stdout, tc.ExpectedOutput) {
+				tr.Passed = true
+				tr.Status = "OK"
+			} else {
+				tr.Status = string(models.StatusWrongAnswer)
+			}
+		case isRuntimeFailure(res.StatusID):
+			tr.Status = string(models.StatusRuntimeError)
+			if !tc.IsHidden {
+				tr.Message = truncate(firstNonEmpty(res.Stderr, res.Message, res.StatusDescription), maxOutputPreview)
+			} else {
+				tr.Message = res.StatusDescription
+			}
+		default:
+			return nil, fmt.Errorf("%w: unexpected status %d (%s)", docker.ErrUnavailable, res.StatusID, res.StatusDescription)
+		}
+		results = append(results, tr)
+	}
+
+	return results, nil
+}
+
 func (s *SubmissionService) save(ctx context.Context, sub *models.Submission, results []models.TestResult) (*models.Submission, error) {
 	if results != nil && len(results) > 0 {
 		if b, err := json.Marshal(results); err == nil {

@@ -30,6 +30,19 @@ func (h *SubmissionController) Create(c *gin.Context) {
 	utils.Success(c, http.StatusCreated, "submission evaluated", gin.H{"submission": sub})
 }
 
+func (h *SubmissionController) Run(c *gin.Context) {
+	var req RunTestCasesRequest
+	if !bindJSON(c, &req) {
+		return
+	}
+	results, err := h.submissions.Run(c.Request.Context(), middleware.CurrentUserID(c), req.QuizID, req.SourceCode)
+	if err != nil {
+		handleError(c, err)
+		return
+	}
+	utils.Success(c, http.StatusOK, "test cases executed", gin.H{"results": results})
+}
+
 func (h *SubmissionController) List(c *gin.Context) {
 	var quizID uint
 	if raw := c.Query("quiz_id"); raw != "" {

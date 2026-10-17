@@ -42,6 +42,11 @@ type GenerateTestCasesRequest struct {
 	Count            int    `json:"count" binding:"omitempty,min=1,max=10"`
 }
 
+type RunTestCasesRequest struct {
+	QuizID     uint   `json:"quiz_id" binding:"required"`
+	SourceCode string `json:"source_code" binding:"required,max=50000"`
+}
+
 type SubmissionRequest struct {
 	QuizID     uint   `json:"quiz_id" binding:"required"`
 	SourceCode string `json:"source_code" binding:"required,max=50000"`

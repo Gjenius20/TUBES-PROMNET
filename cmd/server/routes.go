@@ -63,6 +63,9 @@ func newRouter(cfg *config.Config, h handlers) *gin.Engine {
 		protected.POST("/submissions", middleware.RateLimit(10, time.Minute, middleware.ByUser),
 			middleware.RequireEnrollmentForSubmission(h.enrollment.EnrollmentService, h.quiz.Quizzes),
 			h.submission.Create)
+		protected.POST("/submissions/run", middleware.RateLimit(20, time.Minute, middleware.ByUser),
+			middleware.RequireEnrollmentForSubmission(h.enrollment.EnrollmentService, h.quiz.Quizzes),
+			h.submission.Run)
 		protected.GET("/submissions", h.submission.List)
 		protected.GET("/submissions/:id", h.submission.Get)
 

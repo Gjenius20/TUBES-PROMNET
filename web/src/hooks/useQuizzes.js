@@ -36,6 +36,14 @@ export function useSubmit(quizId) {
   })
 }
 
+export function useRunTestCases(quizId) {
+  return useMutation({
+    mutationFn: async ({ sourceCode }) =>
+      (await api.post('/submissions/run', { quiz_id: Number(quizId), source_code: sourceCode })).data
+        .data.results,
+  })
+}
+
 export function useCreateQuiz() {
   const qc = useQueryClient()
   return useMutation({
@@ -73,8 +81,8 @@ export function useGenerateTestCases(quizId) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (values) =>
-      (await api.post('/admin/quizzes/generate-testcases', { quiz_id: Number(quizId), ...values }))
-        .data.data.test_cases,
+      (await api.post('/admin/quizzes/generate-testcases', { quiz_id: Number(quizId), ...values })).data
+        .data.test_cases,
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-quiz', quizId] }),
   })
 }
